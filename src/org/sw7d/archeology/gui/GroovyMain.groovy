@@ -16,6 +16,15 @@ import com.jme3.util.TangentBinormalGenerator
 import com.jme3.math.Quaternion
 import com.jme3.light.AmbientLight
 import com.jme3.renderer.queue.RenderQueue.ShadowMode
+import com.jme3.input.controls.KeyTrigger
+import com.jme3.input.KeyInput
+import com.jme3.input.controls.ActionListener
+import com.jme3.font.BitmapText
+import com.jme3.input.controls.Trigger
+import com.jme3.input.controls.MouseButtonTrigger
+import com.jme3.input.MouseInput
+import com.jme3.collision.CollisionResults
+import com.jme3.math.Ray
 /**
  *
  * @author ps
@@ -58,14 +67,54 @@ class GroovyMain extends SimpleApplication {
         cam.lookAt(new Vector3f(-150f, -130f, 150f), pivot.getLocalTranslation())
         flyCam.setMoveSpeed((float) (flyCam.getMoveSpeed() * 10f));
         
-        
-        
+        initKeys()
+        initCrossHairs() 
         mat = makeMaterial()
         makeQuickGraph()
         //makeGraphFromPickle()
         
+        println guiNode.class.name
+        
 
 
+    }
+    
+    def initKeys() {
+         handleAction("Skip", new KeyTrigger(KeyInput.KEY_J), {boolean keyPressed, float tpf -> if (!keyPressed) {flyCam.moveCamera(10, false)}})
+         handleAction("Shoot", new MouseButtonTrigger(MouseInput.BUTTON_LEFT), 
+             {boolean keyPressed, float tpf -> if (!keyPressed) {
+                     println "Click!"
+                     CollisionResults results = new CollisionResults()
+                     Ray ray = new Ray(cam.location, cam.direction)
+                     pivot.collideWith(ray, results)
+                     println results.closestCollision?.geometry?.name
+                 }
+             })
+        
+    }
+    
+    void handleAction (String aname, Trigger trigger, Closure handler) {
+        ActionListener actionListener = new ActionListener() {
+            String actionName = aname
+            void onAction(String name, boolean keyPressed, float tpf) {
+                if (name == actionName) {
+                    handler.call(keyPressed, tpf)
+                }
+            }
+        }
+        inputManager.addMapping(aname, trigger)
+        inputManager.addListener(actionListener, aname)
+    }
+    
+    def initCrossHairs() {
+        setDisplayStatView(false);
+        guiFont = assetManager.loadFont("Interface/Fonts/Default.fnt");
+        BitmapText ch = new BitmapText(guiFont, false);
+        ch.setSize(guiFont.getCharSet().getRenderedSize() * 2);
+        ch.setText("+"); // crosshairs
+        ch.setLocalTranslation( // center
+            (float) (settings.getWidth() / 2 - ch.getLineWidth()/2), (float) (settings.getHeight() / 2 + ch.getLineHeight()/2), 150f);
+        guiNode.attachChild(ch);
     }
     
     Material makeMaterial() {
@@ -168,7 +217,7 @@ class GroovyMain extends SimpleApplication {
     
     void makeBox(String projectName, int popularity, int imports, int size) {
         Box b = new Box(new Vector3f(popularity / 10,imports / 10, 0), new Vector3f(popularity / 10 + 1,imports / 10+1, size/100));
-        Geometry geom = new Geometry("Box", b);
+        Geometry geom = new Geometry(projectName, b);
         TangentBinormalGenerator.generate(b);
         geom.setMaterial(mat);
         pivot.attachChild(geom);     
