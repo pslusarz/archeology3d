@@ -27,6 +27,14 @@ class GroovyMain extends SimpleApplication {
     }
     
     Node pivot
+    Material mat
+    Modules modules
+    def javaFiles
+    def javaNames
+    def namesByPopularity
+    final int MAX_CLASSES = 3000
+    
+    int currentModule = 0
     
     @Override
     void simpleInitApp() {
@@ -34,6 +42,7 @@ class GroovyMain extends SimpleApplication {
         def al = new AmbientLight()
         al.setColor(ColorRGBA.White.mult(0.5f))
         pivot.addLight(al)
+        
         
         makeLight(50,150,150, ColorRGBA.White) 
         
@@ -49,12 +58,50 @@ class GroovyMain extends SimpleApplication {
         cam.lookAt(new Vector3f(-150f, -130f, 150f), pivot.getLocalTranslation())
         flyCam.setMoveSpeed((float) (flyCam.getMoveSpeed() * 10f));
         
+        
+        
+        mat = makeMaterial()
         makeQuickGraph()
         //makeGraphFromPickle()
         
 
 
     }
+    
+    Material makeMaterial() {
+        Material result = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
+        result.setTexture("DiffuseMap", 
+            assetManager.loadTexture("Common/MatDefs/SSAO/Textures/random.png"));
+        result.setBoolean('UseMaterialColors', true)
+        result.setColor('Diffuse', ColorRGBA.White)
+        result.setColor('Ambient', ColorRGBA.White)
+        result.setColor('Specular', ColorRGBA.White)
+        result.setFloat('Shininess', 64f)
+        return result
+    }
+    
+    @Override
+    public void simpleUpdate(float tpf) {
+        if (modules && currentModule < namesByPopularity.size() && currentModule < MAX_CLASSES) {
+            currentModule++
+            def keys = []
+            keys.addAll(namesByPopularity.keySet())
+            def className = keys[currentModule]
+            def list = namesByPopularity[keys[currentModule]]
+        
+            ArcheologyFile javaFile = modules.findFirstClassFile(className)
+            if (javaFile) {
+                def javaImports = javaFile.imports.findAll{javaNames.contains(it)}
+                makeBox (javaFile.javaName(), list.size(), javaImports.size(), javaFile.linesCount)
+                
+                if (currentModule%100 == 0) {
+                    println "$currentModule/${namesByPopularity.size()} ${javaFile.javaName()} ${list.size()} ${javaImports.size()} ${javaFile.linesCount}"
+                }
+            }
+        }
+        
+           
+    } 
     
     void makeQuickGraph() {
         Apache5000.classes.each {
@@ -64,26 +111,26 @@ class GroovyMain extends SimpleApplication {
     
     
     void makeGraphFromPickle() {
-        Modules modules = Modules.create()
+        modules = Modules.create()
         
-        def javaFiles = modules*.files.flatten().findAll{!it.javaName()?.startsWith('java') && it.extension() == 'java'}
-        def javaNames = javaFiles*.javaName()
-        def namesByPopularity = modules*.files*.imports.flatten().findAll{!it?.startsWith('java') && it}.groupBy {it}.sort {a, b -> -a.value.size() <=>-b.value.size()}
+        javaFiles = modules*.files.flatten().findAll{!it.javaName()?.startsWith('java') && it.extension() == 'java'}
+        javaNames = javaFiles*.javaName()
+        namesByPopularity = modules*.files*.imports.flatten().findAll{!it?.startsWith('java') && it}.groupBy {it}.sort {a, b -> -a.value.size() <=>-b.value.size()}
 
-        int count = 0
-        namesByPopularity.each { className, list ->
-            if (count < 2000) {
-                ArcheologyFile javaFile = modules.findFirstClassFile(className)
-                if (javaFile) {
-                    def javaImports = javaFile.imports.findAll{javaNames.contains(it)}
-                    makeBox (javaFile.javaName(), list.size(), javaImports.size(), javaFile.linesCount)
-                    count ++
-                    if (count%100 == 0) {
-                        println "$count/${namesByPopularity.size()}"
-                    }
-                }
-            }
-        }
+        //        int count = 0
+        //        namesByPopularity.each { className, list ->
+        //            if (count < 2000) {
+        //                ArcheologyFile javaFile = modules.findFirstClassFile(className)
+        //                if (javaFile) {
+        //                    def javaImports = javaFile.imports.findAll{javaNames.contains(it)}
+        //                    makeBox (javaFile.javaName(), list.size(), javaImports.size(), javaFile.linesCount)
+        //                    count ++
+        //                    if (count%100 == 0) {
+        //                        println "$count/${namesByPopularity.size()}"
+        //                    }
+        //                }
+        //            }
+        //        }
     }
     
     
@@ -123,20 +170,6 @@ class GroovyMain extends SimpleApplication {
         Box b = new Box(new Vector3f(popularity / 10,imports / 10, 0), new Vector3f(popularity / 10 + 1,imports / 10+1, size/100));
         Geometry geom = new Geometry("Box", b);
         TangentBinormalGenerator.generate(b);
-        Material mat = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
-        mat.setTexture("DiffuseMap", 
-            assetManager.loadTexture("Common/MatDefs/SSAO/Textures/random.png"));
-
-////        mat.setTexture("NormalMap", 
-////            assetManager.loadTexture("Common/MatDefs/Water/Textures/water_normalmap.png"));
-//        mat.setReceivesShadows(true)
-        mat.setBoolean('UseMaterialColors', true)
-        mat.setColor('Diffuse', ColorRGBA.White)
-        mat.setColor('Ambient', ColorRGBA.White)
-        mat.setColor('Specular', ColorRGBA.White)
-        mat.setFloat('Shininess', 64f)
-//mat.setColor("Ambient", ColorRGBA.Red);   // ... color of this object
-//mat.setColor("Diffuse", ColorRGBA.Blue);
         geom.setMaterial(mat);
         pivot.attachChild(geom);     
     }
