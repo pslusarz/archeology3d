@@ -36,12 +36,13 @@ class GroovyMain extends SimpleApplication {
     }
     
     Node pivot
-    Material mat
+    Material mat, selectedMaterial
     Modules modules
     def javaFiles
     def javaNames
     def namesByPopularity
     final int MAX_CLASSES = 3000
+    Geometry selected
     
     int currentModule = 0
     
@@ -69,7 +70,8 @@ class GroovyMain extends SimpleApplication {
         
         initKeys()
         initCrossHairs() 
-        mat = makeMaterial()
+        mat = makeMaterial("Common/MatDefs/SSAO/Textures/random.png")
+        selectedMaterial = makeMaterial("Textures/Sky/Lagoon/lagoon_up.jpg")
         makeQuickGraph()
         //makeGraphFromPickle()
         
@@ -87,10 +89,21 @@ class GroovyMain extends SimpleApplication {
                      CollisionResults results = new CollisionResults()
                      Ray ray = new Ray(cam.location, cam.direction)
                      pivot.collideWith(ray, results)
+                     select(results.closestCollision?.geometry)
                      println results.closestCollision?.geometry?.name
                  }
              })
         
+    }
+    
+    void select(Geometry selection) {
+        if (selection) {
+            selection.setMaterial(selectedMaterial)
+        }
+        if (selected) {
+            selected.setMaterial(mat)
+        }
+        selected = selection
     }
     
     void handleAction (String aname, Trigger trigger, Closure handler) {
@@ -117,10 +130,10 @@ class GroovyMain extends SimpleApplication {
         guiNode.attachChild(ch);
     }
     
-    Material makeMaterial() {
+    Material makeMaterial(String path) {
         Material result = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
         result.setTexture("DiffuseMap", 
-            assetManager.loadTexture("Common/MatDefs/SSAO/Textures/random.png"));
+            assetManager.loadTexture(path));
         result.setBoolean('UseMaterialColors', true)
         result.setColor('Diffuse', ColorRGBA.White)
         result.setColor('Ambient', ColorRGBA.White)
