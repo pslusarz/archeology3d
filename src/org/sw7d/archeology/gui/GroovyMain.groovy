@@ -76,8 +76,7 @@ class GroovyMain extends SimpleApplication {
         originMaterial = makeMaterial("Textures/Terrain/Pond/Pond.jpg")
         //makeQuickGraph()
         makeGraphFromPickle()
-        
-        println guiNode.class.name
+
         
 
 
@@ -85,9 +84,8 @@ class GroovyMain extends SimpleApplication {
     
     def initKeys() {
         handleAction("Skip", new KeyTrigger(KeyInput.KEY_J), {boolean keyPressed, float tpf -> if (!keyPressed) {flyCam.moveCamera(10, false)}})
-        handleAction("Shoot", new MouseButtonTrigger(MouseInput.BUTTON_LEFT), 
+        handleAction("Select", new MouseButtonTrigger(MouseInput.BUTTON_LEFT), 
             {boolean keyPressed, float tpf -> if (!keyPressed) {
-                    println "Click!"
                     CollisionResults results = new CollisionResults()
                     Ray ray = new Ray(cam.location, cam.direction)
                     pivot.collideWith(ray, results)
@@ -115,10 +113,12 @@ class GroovyMain extends SimpleApplication {
             if (selected) {
                 if (selected == currentSpatial) {
                     selected.setMaterial(originMaterial)
+                    println " > Origin: "+selected.name
                 } else {
                     if (!criteria.call(currentSpatial)) {
                         pivot.detachChild(currentSpatial) 
                     } else {
+                        println "    "+currentSpatial.name
                         reset(currentSpatial)
                     }
                 }                            
@@ -149,6 +149,7 @@ class GroovyMain extends SimpleApplication {
             String actionName = aname
             void onAction(String name, boolean keyPressed, float tpf) {
                 if (name == actionName) {
+                    if (!keyPressed) println "======== $actionName =========="
                     handler.call(keyPressed, tpf)
                 }
             }
@@ -211,6 +212,7 @@ class GroovyMain extends SimpleApplication {
     
     
     void makeGraphFromPickle() {
+        println "PATIENce MORTAL, loADING SOM3 DATAZ"
         modules = Modules.create()
         
         javaFiles = modules*.files.flatten().findAll{!it.javaName()?.startsWith('java') && it.extension() == 'java'}
