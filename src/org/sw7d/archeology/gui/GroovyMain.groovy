@@ -38,10 +38,11 @@ class GroovyMain extends SimpleApplication {
     Node pivot
     Material mat, selectedMaterial
     Modules modules
+    Map<String, Geometry> spatialsByName = [:]
     def javaFiles
     def javaNames
     def namesByPopularity
-    final int MAX_CLASSES = 3000
+    final int MAX_CLASSES = 2000
     Geometry selected
     
     int currentModule = 0
@@ -53,8 +54,8 @@ class GroovyMain extends SimpleApplication {
         al.setColor(ColorRGBA.White.mult(0.5f))
         pivot.addLight(al)
         
-        
-        makeLight(50,150,150, ColorRGBA.White) 
+        viewPort.setBackgroundColor(ColorRGBA.White);
+        makeLight(100,1500,1500, ColorRGBA.White) 
         
         markOrigin()
         
@@ -71,9 +72,9 @@ class GroovyMain extends SimpleApplication {
         initKeys()
         initCrossHairs() 
         mat = makeMaterial("Common/MatDefs/SSAO/Textures/random.png")
-        selectedMaterial = makeMaterial("Textures/Sky/Lagoon/lagoon_up.jpg")
-        makeQuickGraph()
-        //makeGraphFromPickle()
+        selectedMaterial = makeMaterial("Textures/Terrain/Rock/Rock.PNG")
+        //makeQuickGraph()
+        makeGraphFromPickle()
         
         println guiNode.class.name
         
@@ -91,6 +92,44 @@ class GroovyMain extends SimpleApplication {
                      pivot.collideWith(ray, results)
                      select(results.closestCollision?.geometry)
                      println results.closestCollision?.geometry?.name
+                 }
+             })
+         handleAction("Users", new KeyTrigger(KeyInput.KEY_K), 
+             {boolean keyPressed, float tpf -> if (!keyPressed) {
+                     
+                     spatialsByName.each { String name, Geometry currentSpatial ->
+
+                         ArcheologyFile currentFile = modules.findFirstClassFile(currentSpatial.name)
+                         if (selected && !currentFile.imports?.contains(selected.name) && currentSpatial != selected) {
+                             pivot.detachChild(currentSpatial)
+                         } else {
+                             pivot.attachChild(currentSpatial)
+                             println currentFile.javaName()
+                         }
+                         
+                     }
+                 }
+             })
+         
+         handleAction("Imports", new KeyTrigger(KeyInput.KEY_I), 
+             {boolean keyPressed, float tpf -> if (!keyPressed) {
+                     
+                     spatialsByName.each { String name, Geometry currentSpatial ->
+
+                         if (selected) {
+                             ArcheologyFile selectedFile = modules.findFirstClassFile(selected.name)
+                             if (!selectedFile.imports.contains(currentSpatial.name) && selected != currentSpatial) {
+                                pivot.detachChild(currentSpatial) 
+                             } else {
+                                pivot.attachChild(currentSpatial)
+                               println currentSpatial.name
+                             }                            
+                         } else {
+                             pivot.attachChild(currentSpatial)
+                             println currentSpatial.name
+                         }
+                         
+                     }
                  }
              })
         
@@ -218,19 +257,20 @@ class GroovyMain extends SimpleApplication {
     
     void markOrigin() {
         (1..20).each {
-            makeUnitBox(10*it,0,0, ColorRGBA.Red)
+            makeUnitBox(10*it,0,0, ColorRGBA.Black)
         }
         (1..20).each {
-            makeUnitBox(0,10*it,0, ColorRGBA.Green)
+            makeUnitBox(0,10*it,0, ColorRGBA.Gray)
         }
         (1..20).each {
-            makeUnitBox(0,0,10*it, ColorRGBA.Blue)
+            makeUnitBox(0,0,10*it, ColorRGBA.LightGray)
         }
     }
     
     void makeBox(String projectName, int popularity, int imports, int size) {
         Box b = new Box(new Vector3f(popularity / 10,imports / 10, 0), new Vector3f(popularity / 10 + 1,imports / 10+1, size/100));
         Geometry geom = new Geometry(projectName, b);
+        spatialsByName[projectName] = geom
         TangentBinormalGenerator.generate(b);
         geom.setMaterial(mat);
         pivot.attachChild(geom);     
