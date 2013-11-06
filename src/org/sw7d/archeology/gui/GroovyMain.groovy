@@ -36,13 +36,13 @@ class GroovyMain extends SimpleApplication {
     }
     
     Node pivot
-    Material mat, selectedMaterial
+    Material mat, selectedMaterial, originMaterial
     Modules modules
     Map<String, Geometry> spatialsByName = [:]
     def javaFiles
     def javaNames
     def namesByPopularity
-    final int MAX_CLASSES = 2000
+    final int MAX_CLASSES = 3000
     Geometry selected
     
     int currentModule = 0
@@ -73,6 +73,7 @@ class GroovyMain extends SimpleApplication {
         initCrossHairs() 
         mat = makeMaterial("Common/MatDefs/SSAO/Textures/random.png")
         selectedMaterial = makeMaterial("Textures/Terrain/Rock/Rock.PNG")
+        originMaterial = makeMaterial("Textures/Terrain/Pond/Pond.jpg")
         //makeQuickGraph()
         makeGraphFromPickle()
         
@@ -83,63 +84,76 @@ class GroovyMain extends SimpleApplication {
     }
     
     def initKeys() {
-         handleAction("Skip", new KeyTrigger(KeyInput.KEY_J), {boolean keyPressed, float tpf -> if (!keyPressed) {flyCam.moveCamera(10, false)}})
-         handleAction("Shoot", new MouseButtonTrigger(MouseInput.BUTTON_LEFT), 
-             {boolean keyPressed, float tpf -> if (!keyPressed) {
-                     println "Click!"
-                     CollisionResults results = new CollisionResults()
-                     Ray ray = new Ray(cam.location, cam.direction)
-                     pivot.collideWith(ray, results)
-                     select(results.closestCollision?.geometry)
-                     println results.closestCollision?.geometry?.name
-                 }
-             })
-         handleAction("Users", new KeyTrigger(KeyInput.KEY_K), 
-             {boolean keyPressed, float tpf -> if (!keyPressed) {
+        handleAction("Skip", new KeyTrigger(KeyInput.KEY_J), {boolean keyPressed, float tpf -> if (!keyPressed) {flyCam.moveCamera(10, false)}})
+        handleAction("Shoot", new MouseButtonTrigger(MouseInput.BUTTON_LEFT), 
+            {boolean keyPressed, float tpf -> if (!keyPressed) {
+                    println "Click!"
+                    CollisionResults results = new CollisionResults()
+                    Ray ray = new Ray(cam.location, cam.direction)
+                    pivot.collideWith(ray, results)
+                    select(results.closestCollision?.geometry)
+                    println results.closestCollision?.geometry?.name
+                }
+            })
+        handleAction("Users", new KeyTrigger(KeyInput.KEY_K), 
+            {boolean keyPressed, float tpf -> if (!keyPressed) {
                      
-                     spatialsByName.each { String name, Geometry currentSpatial ->
-
-                         ArcheologyFile currentFile = modules.findFirstClassFile(currentSpatial.name)
-                         if (selected && !currentFile.imports?.contains(selected.name) && currentSpatial != selected) {
-                             pivot.detachChild(currentSpatial)
-                         } else {
-                             pivot.attachChild(currentSpatial)
-                             println currentFile.javaName()
-                         }
+                    spatialsByName.each { String name, Geometry currentSpatial ->
+                        if (selected) {
+                            if (currentSpatial == selected) {
+                                selected.setMaterial(originMaterial)  
+                            } else {
+                                ArcheologyFile currentFile = modules.findFirstClassFile(currentSpatial.name)
+                                if (!currentFile.imports?.contains(selected.name)) {
+                                    pivot.detachChild(currentSpatial)
+                                } else {
+                                    reset(currentSpatial)
+                                }
+                            }
+                        } else {
+                            reset(currentSpatial)
+                        }    
                          
-                     }
-                 }
-             })
+                    }
+                }
+            })
          
-         handleAction("Imports", new KeyTrigger(KeyInput.KEY_I), 
-             {boolean keyPressed, float tpf -> if (!keyPressed) {
+        handleAction("Imports", new KeyTrigger(KeyInput.KEY_I), 
+            {boolean keyPressed, float tpf -> if (!keyPressed) {
                      
-                     spatialsByName.each { String name, Geometry currentSpatial ->
+                    spatialsByName.each { String name, Geometry currentSpatial ->
 
-                         if (selected) {
-                             ArcheologyFile selectedFile = modules.findFirstClassFile(selected.name)
-                             if (!selectedFile.imports.contains(currentSpatial.name) && selected != currentSpatial) {
-                                pivot.detachChild(currentSpatial) 
-                             } else {
-                                pivot.attachChild(currentSpatial)
-                               println currentSpatial.name
-                             }                            
-                         } else {
-                             pivot.attachChild(currentSpatial)
-                             println currentSpatial.name
-                         }
+                        if (selected) {
+                            if (selected == currentSpatial) {
+                                selected.setMaterial(originMaterial)
+                            } else {
+                                ArcheologyFile selectedFile = modules.findFirstClassFile(selected.name)
+                                if (!selectedFile.imports.contains(currentSpatial.name)) {
+                                    pivot.detachChild(currentSpatial) 
+                                } else {
+                                  reset(currentSpatial)
+                                }
+                            }                            
+                        } else {
+                            reset(currentSpatial)
+                        }
                          
-                     }
-                 }
-             })
+                    }
+                }
+            })
         
+    }
+    
+    void reset(Geometry geometry) {
+        pivot.attachChild(geometry)
+        geometry.setMaterial(mat)
     }
     
     void select(Geometry selection) {
         if (selection) {
             selection.setMaterial(selectedMaterial)
         }
-        if (selected) {
+        if (selected && selected.material != originMaterial && selected != selection) {
             selected.setMaterial(mat)
         }
         selected = selection
