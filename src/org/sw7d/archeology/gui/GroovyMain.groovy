@@ -42,7 +42,7 @@ class GroovyMain extends SimpleApplication {
     def javaFiles
     def javaNames
     def namesByPopularity
-    final int MAX_CLASSES = 3000
+    final int MAX_CLASSES = 600
     Geometry selected
     
     int currentModule = 0
@@ -97,51 +97,36 @@ class GroovyMain extends SimpleApplication {
             })
         handleAction("Users", new KeyTrigger(KeyInput.KEY_K), 
             {boolean keyPressed, float tpf -> if (!keyPressed) {
-                     
-                    spatialsByName.each { String name, Geometry currentSpatial ->
-                        if (selected) {
-                            if (currentSpatial == selected) {
-                                selected.setMaterial(originMaterial)  
-                            } else {
-                                ArcheologyFile currentFile = modules.findFirstClassFile(currentSpatial.name)
-                                if (!currentFile.imports?.contains(selected.name)) {
-                                    pivot.detachChild(currentSpatial)
-                                } else {
-                                    reset(currentSpatial)
-                                }
-                            }
-                        } else {
-                            reset(currentSpatial)
-                        }    
-                         
-                    }
+                  displayAllMeetingCriteria {Geometry toBeDisplayed -> modules.findFirstClassFile(toBeDisplayed.name).imports?.contains(selected.name)}  
                 }
             })
          
         handleAction("Imports", new KeyTrigger(KeyInput.KEY_I), 
             {boolean keyPressed, float tpf -> if (!keyPressed) {
-                     
-                    spatialsByName.each { String name, Geometry currentSpatial ->
-
-                        if (selected) {
-                            if (selected == currentSpatial) {
-                                selected.setMaterial(originMaterial)
-                            } else {
-                                ArcheologyFile selectedFile = modules.findFirstClassFile(selected.name)
-                                if (!selectedFile.imports.contains(currentSpatial.name)) {
-                                    pivot.detachChild(currentSpatial) 
-                                } else {
-                                  reset(currentSpatial)
-                                }
-                            }                            
-                        } else {
-                            reset(currentSpatial)
-                        }
-                         
-                    }
+                    displayAllMeetingCriteria {Geometry toBeDisplayed ->  modules.findFirstClassFile(selected.name).imports.contains(toBeDisplayed.name)}
                 }
             })
         
+    }
+    
+    void displayAllMeetingCriteria(Closure criteria) {
+        spatialsByName.each { String name, Geometry currentSpatial ->
+
+            if (selected) {
+                if (selected == currentSpatial) {
+                    selected.setMaterial(originMaterial)
+                } else {
+                    if (!criteria.call(currentSpatial)) {
+                        pivot.detachChild(currentSpatial) 
+                    } else {
+                        reset(currentSpatial)
+                    }
+                }                            
+            } else {
+                reset(currentSpatial)
+            }
+                         
+        }   
     }
     
     void reset(Geometry geometry) {
