@@ -261,7 +261,17 @@ class Module implements Serializable{
 		  	  String line = buildFile.text.split('\n').find { line ->
 					line.startsWith('group')
 			  }
-			  group = line ? line.find(/'(.+)'/).replace("'","") : null
+              if (line) {
+                  def betweenQuotes = line.find(/'(.+)'/)
+                  if (betweenQuotes) {
+                      group = betweenQuotes.replace("'", "")
+                  } else {
+                      betweenQuotes =  line.find(/"(.+)"/)
+                      if (betweenQuotes) {
+                          group = betweenQuotes.replace('"', '')
+                      }
+                  }
+              }
 		  }
 	  }
 	  else if(hasIvy && !isGrails) {
