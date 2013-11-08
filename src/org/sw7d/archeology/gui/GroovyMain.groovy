@@ -72,8 +72,8 @@ class GroovyMain extends SimpleApplication {
         initKeys()
         initCrossHairs() 
         mat = makeMaterial("Common/MatDefs/SSAO/Textures/random.png")
-        selectedMaterial = makeMaterial("Textures/Terrain/Rock/Rock.PNG")
-        originMaterial = makeMaterial("Textures/Terrain/Pond/Pond.jpg")
+        selectedMaterial = makeMaterial("Common/MatDefs/Water/Textures/caustics.jpg")
+        originMaterial = makeMaterial("Common/MatDefs/Water/Textures/foam.jpg")
         //makeQuickGraph()
         makeGraphFromPickle()
 
