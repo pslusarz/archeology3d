@@ -45,6 +45,9 @@ class GroovyMain extends SimpleApplication {
     final int MAX_CLASSES = 600
     Geometry selected
     BitmapText backgroundOperation
+    BitmapText currentSelection
+    BitmapText selectionOrigin
+    boolean loadedModules = false
     
     int currentModule = 0
     
@@ -76,7 +79,7 @@ class GroovyMain extends SimpleApplication {
         selectedMaterial = makeMaterial("Textures/Terrain/Rock/Rock.PNG")
         originMaterial = makeMaterial("Textures/Terrain/Pond/Pond.jpg")
         //makeQuickGraph()
-        //makeGraphFromPickle()
+        makeGraphFromPickle()
 
         
 
@@ -109,11 +112,13 @@ class GroovyMain extends SimpleApplication {
     }
     
     void displayAllMeetingCriteria(Closure criteria) {
+        selectionOrigin.text = ""
         spatialsByName.each { String name, Geometry currentSpatial ->
 
             if (selected) {
                 if (selected == currentSpatial) {
                     selected.setMaterial(originMaterial)
+                    selectionOrigin.text = "Origin: "+selected.name
                     println " > Origin: "+selected.name
                 } else {
                     if (!criteria.call(currentSpatial)) {
@@ -143,6 +148,7 @@ class GroovyMain extends SimpleApplication {
             selected.setMaterial(mat)
         }
         selected = selection
+        currentSelection.text = "Selected: ${selected?.name?:'none'}"
     }
     
     void handleAction (String aname, Trigger trigger, Closure handler) {
@@ -168,12 +174,20 @@ class GroovyMain extends SimpleApplication {
             (float) (settings.getWidth() / 2 - ch.getLineWidth()/2), (float) (settings.getHeight() / 2 + ch.getLineHeight()/2), 150f);
         guiNode.attachChild(ch);
         
-        backgroundOperation = new BitmapText(guiFont, false);          
-        backgroundOperation.setSize(guiFont.getCharSet().getRenderedSize());      // font size
-        backgroundOperation.setColor(ColorRGBA.Red);                             // font color
-        backgroundOperation.setText("");             // the text
-        backgroundOperation.setLocalTranslation(10f, (float)settings.getHeight() - backgroundOperation.getLineHeight(), 0f); // position
-        guiNode.attachChild(backgroundOperation);
+        backgroundOperation = makeHUDText(10, settings.getHeight() - guiFont.charSet.lineHeight, ColorRGBA.Red)       
+        currentSelection = makeHUDText(settings.getWidth() / 2.5, guiFont.charSet.lineHeight, ColorRGBA.Orange)       
+        selectionOrigin = makeHUDText(10, guiFont.charSet.lineHeight, ColorRGBA.Blue)
+
+    }
+    
+    BitmapText makeHUDText(x, y, ColorRGBA color) {
+        BitmapText result = new BitmapText(guiFont, false);
+        result.setSize(guiFont.getCharSet().getRenderedSize());      // font size
+        result.setColor(color);                             // font color
+        result.setText("");             // the text
+        result.setLocalTranslation((float) x, (float) y, 0f); // position
+        guiNode.attachChild(result);
+        return result
     }
     
     Material makeMaterial(String path) {
@@ -188,17 +202,17 @@ class GroovyMain extends SimpleApplication {
         return result
     }
     
-    boolean firstTimeUpdate = true
+    
+    long lastUpdateTime = System.currentTimeMillis()
     
     @Override
     public void simpleUpdate(float tpf) {
-        if (firstTimeUpdate) {
-            firstTimeUpdate = false
-            backgroundOperation.setText("PATIENce MORTAL, loADING SOM3 DATAZ fr0m D1Zk")
+        if (!loadedModules) {
+            if (System.currentTimeMillis() - lastUpdateTime > 1000) {
+                lastUpdateTime = System.currentTimeMillis()
+                backgroundOperation.text = backgroundOperation.text+"."
+            }
             return
-        }
-        if (!modules) {
-            makeGraphFromPickle()
         }
         if (modules && currentModule < namesByPopularity.size() && currentModule < MAX_CLASSES) {
             currentModule++
@@ -230,14 +244,19 @@ class GroovyMain extends SimpleApplication {
     
     void makeGraphFromPickle() {
         backgroundOperation.setText("PATIENce MORTAL, loADING SOM3 DATAZ")
-        println "PATIENce MORTAL, loADING SOM3 DATAZ"
-        modules = Modules.create()
+        new Thread() {
+            void run() {               
+                modules = Modules.create()
         
-        javaFiles = modules*.files.flatten().findAll{!it.javaName()?.startsWith('java') && it.extension() == 'java'}
-        javaNames = javaFiles*.javaName()
-        namesByPopularity = modules*.files*.imports.flatten().findAll{!it?.startsWith('java') && it}.groupBy {it}.sort {a, b -> -a.value.size() <=>-b.value.size()}
+                javaFiles = modules*.files.flatten().findAll{!it.javaName()?.startsWith('java') && it.extension() == 'java'}
+                javaNames = javaFiles*.javaName()
+                namesByPopularity = modules*.files*.imports.flatten().findAll{!it?.startsWith('java') && it}.groupBy {it}.sort {a, b -> -a.value.size() <=>-b.value.size()}
         
-        backgroundOperation.setText("")
+                backgroundOperation.setText("")
+                loadedModules = true
+            }
+        }.start()
+        
         
     }
     
