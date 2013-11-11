@@ -76,7 +76,7 @@ class GroovyMain extends SimpleApplication {
         selectedMaterial = makeMaterial("Textures/Terrain/Rock/Rock.PNG")
         originMaterial = makeMaterial("Textures/Terrain/Pond/Pond.jpg")
         //makeQuickGraph()
-        makeGraphFromPickle()
+        //makeGraphFromPickle()
 
         
 
@@ -188,8 +188,18 @@ class GroovyMain extends SimpleApplication {
         return result
     }
     
+    boolean firstTimeUpdate = true
+    
     @Override
     public void simpleUpdate(float tpf) {
+        if (firstTimeUpdate) {
+            firstTimeUpdate = false
+            backgroundOperation.setText("PATIENce MORTAL, loADING SOM3 DATAZ fr0m D1Zk")
+            return
+        }
+        if (!modules) {
+            makeGraphFromPickle()
+        }
         if (modules && currentModule < namesByPopularity.size() && currentModule < MAX_CLASSES) {
             currentModule++
             def keys = []
@@ -201,10 +211,7 @@ class GroovyMain extends SimpleApplication {
             if (javaFile) {
                 def javaImports = javaFile.imports.findAll{javaNames.contains(it)}
                 makeBox (javaFile.javaName(), list.size(), javaImports.size(), javaFile.linesCount)
-                
-                if (currentModule%100 == 0) {
-                    println "$currentModule/${namesByPopularity.size()} ${javaFile.javaName()} ${list.size()} ${javaImports.size()} ${javaFile.linesCount}"
-                }
+
             }
             backgroundOperation.text = "Initializing classes (${currentModule} / ${Math.min(MAX_CLASSES, namesByPopularity.size())})"
         } else {
@@ -222,27 +229,16 @@ class GroovyMain extends SimpleApplication {
     
     
     void makeGraphFromPickle() {
+        backgroundOperation.setText("PATIENce MORTAL, loADING SOM3 DATAZ")
         println "PATIENce MORTAL, loADING SOM3 DATAZ"
         modules = Modules.create()
         
         javaFiles = modules*.files.flatten().findAll{!it.javaName()?.startsWith('java') && it.extension() == 'java'}
         javaNames = javaFiles*.javaName()
         namesByPopularity = modules*.files*.imports.flatten().findAll{!it?.startsWith('java') && it}.groupBy {it}.sort {a, b -> -a.value.size() <=>-b.value.size()}
-
-        //        int count = 0
-        //        namesByPopularity.each { className, list ->
-        //            if (count < 2000) {
-        //                ArcheologyFile javaFile = modules.findFirstClassFile(className)
-        //                if (javaFile) {
-        //                    def javaImports = javaFile.imports.findAll{javaNames.contains(it)}
-        //                    makeBox (javaFile.javaName(), list.size(), javaImports.size(), javaFile.linesCount)
-        //                    count ++
-        //                    if (count%100 == 0) {
-        //                        println "$count/${namesByPopularity.size()}"
-        //                    }
-        //                }
-        //            }
-        //        }
+        
+        backgroundOperation.setText("")
+        
     }
     
     
