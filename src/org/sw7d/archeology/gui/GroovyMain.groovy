@@ -32,7 +32,7 @@ import com.jme3.math.Ray
 class GroovyMain extends SimpleApplication {
     static void main(args){
         
-        new GroovyMain().start()
+        new GroovyMain(pauseOnLostFocus: false, displayStatView: false, displayFps: false).start()
     }
     
     Node pivot
@@ -44,6 +44,7 @@ class GroovyMain extends SimpleApplication {
     def namesByPopularity
     final int MAX_CLASSES = 600
     Geometry selected
+    BitmapText backgroundOperation
     
     int currentModule = 0
     
@@ -95,7 +96,7 @@ class GroovyMain extends SimpleApplication {
             })
         handleAction("Users", new KeyTrigger(KeyInput.KEY_K), 
             {boolean keyPressed, float tpf -> if (!keyPressed) {
-                  displayAllMeetingCriteria {Geometry toBeDisplayed -> modules.findFirstClassFile(toBeDisplayed.name).imports?.contains(selected.name)}  
+                    displayAllMeetingCriteria {Geometry toBeDisplayed -> modules.findFirstClassFile(toBeDisplayed.name).imports?.contains(selected.name)}  
                 }
             })
          
@@ -159,7 +160,6 @@ class GroovyMain extends SimpleApplication {
     }
     
     def initCrossHairs() {
-        setDisplayStatView(false);
         guiFont = assetManager.loadFont("Interface/Fonts/Default.fnt");
         BitmapText ch = new BitmapText(guiFont, false);
         ch.setSize(guiFont.getCharSet().getRenderedSize() * 2);
@@ -167,6 +167,13 @@ class GroovyMain extends SimpleApplication {
         ch.setLocalTranslation( // center
             (float) (settings.getWidth() / 2 - ch.getLineWidth()/2), (float) (settings.getHeight() / 2 + ch.getLineHeight()/2), 150f);
         guiNode.attachChild(ch);
+        
+        backgroundOperation = new BitmapText(guiFont, false);          
+        backgroundOperation.setSize(guiFont.getCharSet().getRenderedSize());      // font size
+        backgroundOperation.setColor(ColorRGBA.Red);                             // font color
+        backgroundOperation.setText("");             // the text
+        backgroundOperation.setLocalTranslation(10f, (float)settings.getHeight() - backgroundOperation.getLineHeight(), 0f); // position
+        guiNode.attachChild(backgroundOperation);
     }
     
     Material makeMaterial(String path) {
@@ -199,6 +206,9 @@ class GroovyMain extends SimpleApplication {
                     println "$currentModule/${namesByPopularity.size()} ${javaFile.javaName()} ${list.size()} ${javaImports.size()} ${javaFile.linesCount}"
                 }
             }
+            backgroundOperation.text = "Initializing classes (${currentModule} / ${Math.min(MAX_CLASSES, namesByPopularity.size())})"
+        } else {
+            backgroundOperation.text = ""
         }
         
            
