@@ -2,7 +2,7 @@ Archeology3d
 =========
 ## Visualize large codebases
 
-![Archeology3d screenshot](/tree/master/docs/archeology3d-early-screenshot.png "Archeology3d screenshot")
+![Archeology3d screenshot](/docs/archeology3d-early-screenshot.png "Archeology3d screenshot")
 
 Experiments in visualizing and finding patterns in large codebases. For more background, visit my [Code Archeology blog](http://10kftcode.blogspot.com/).
 
