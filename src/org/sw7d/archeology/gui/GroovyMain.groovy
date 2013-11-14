@@ -46,7 +46,7 @@ class GroovyMain extends SimpleApplication {
     def javaFiles
     def javaNames
     def namesByPopularity
-    final int MAX_CLASSES = 100
+    final int MAX_CLASSES = 3000
     Geometry selected
     BitmapText backgroundOperation
     BitmapText currentSelection
@@ -312,7 +312,7 @@ class GroovyMain extends SimpleApplication {
         txt2.setColor(ColorRGBA.Black)
         txt2.setText("Imports >");
         txt2.rotate(0f, 0f, (float)FastMath.DEG_TO_RAD * (90));
-        txt2.setLocalTranslation(-25f, 50f, 0f)
+        txt2.setLocalTranslation(-25f, 30f, 0f)
         pivot.attachChild(txt2);
         
         BitmapText txt3 = new BitmapText(fnt, false);
@@ -328,7 +328,9 @@ class GroovyMain extends SimpleApplication {
     }
     
     void makeBox(String projectName, int popularity, int imports, int size) {
-        Box b = new Box(new Vector3f(popularity / 10,imports / 10, size / 100-2), new Vector3f(popularity / 10 + 1,imports / 10+1, size/100));
+        //size 2 box, useful for drilling down in heavily populated zones
+        //Box b = new Box(new Vector3f(popularity / 10,imports / 10, size / 100-2), new Vector3f(popularity / 10 + 1,imports / 10+1, size/100));
+        Box b = new Box(new Vector3f(popularity / 10,imports / 10, 0), new Vector3f(popularity / 10 + 1,imports / 10+1, size/100));
         Geometry geom = new Geometry(projectName, b);
         spatialsByName[projectName] = geom
         TangentBinormalGenerator.generate(b);
