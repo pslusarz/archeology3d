@@ -25,6 +25,10 @@ import com.jme3.input.controls.MouseButtonTrigger
 import com.jme3.input.MouseInput
 import com.jme3.collision.CollisionResults
 import com.jme3.math.Ray
+import com.jme3.font.BitmapFont
+import com.jme3.font.Rectangle
+import com.jme3.math.FastMath
+import com.jme3.renderer.queue.RenderQueue.Bucket
 /**
  *
  * @author ps
@@ -42,7 +46,7 @@ class GroovyMain extends SimpleApplication {
     def javaFiles
     def javaNames
     def namesByPopularity
-    final int MAX_CLASSES = 600
+    final int MAX_CLASSES = 100
     Geometry selected
     BitmapText backgroundOperation
     BitmapText currentSelection
@@ -291,10 +295,40 @@ class GroovyMain extends SimpleApplication {
         (1..20).each {
             makeUnitBox(0,0,10*it, ColorRGBA.LightGray)
         }
+        
+        BitmapFont fnt = assetManager.loadFont("Interface/Fonts/Default.fnt");
+        BitmapText txt = new BitmapText(fnt, false);
+        txt.setBox(new Rectangle(0, 30, 100, 0));       
+        txt.setSize( 15f );
+        txt.setColor(ColorRGBA.Black)
+        txt.setText("< Popularity");
+        txt.rotate(0f, 0f, (float)FastMath.DEG_TO_RAD * (180));
+        txt.setLocalTranslation(75f,-75f,0f)
+        pivot.attachChild(txt);
+        
+        BitmapText txt2 = new BitmapText(fnt, false);
+        txt2.setBox(new Rectangle(0, 30, 100, 0));       
+        txt2.setSize( 15f );
+        txt2.setColor(ColorRGBA.Black)
+        txt2.setText("Imports >");
+        txt2.rotate(0f, 0f, (float)FastMath.DEG_TO_RAD * (90));
+        txt2.setLocalTranslation(-25f, 50f, 0f)
+        pivot.attachChild(txt2);
+        
+        BitmapText txt3 = new BitmapText(fnt, false);
+        txt3.setBox(new Rectangle(0, 0, 100, 30));       
+        txt3.setSize( 15f );
+        txt3.setColor(ColorRGBA.Black)
+        txt3.setText("Size >");
+        txt3.rotate((float)FastMath.DEG_TO_RAD * 45, (float)FastMath.DEG_TO_RAD * (90), (float)FastMath.DEG_TO_RAD * (180));
+        txt3.setLocalTranslation(-100f,-120f,30f)
+        pivot.attachChild(txt3);
+        
+        
     }
     
     void makeBox(String projectName, int popularity, int imports, int size) {
-        Box b = new Box(new Vector3f(popularity / 10,imports / 10, 0), new Vector3f(popularity / 10 + 1,imports / 10+1, size/100));
+        Box b = new Box(new Vector3f(popularity / 10,imports / 10, size / 100-2), new Vector3f(popularity / 10 + 1,imports / 10+1, size/100));
         Geometry geom = new Geometry(projectName, b);
         spatialsByName[projectName] = geom
         TangentBinormalGenerator.generate(b);
