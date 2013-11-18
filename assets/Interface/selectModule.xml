@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<nifty xmlns="http://nifty-gui.sourceforge.net/nifty-1.3.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://nifty-gui.sourceforge.net/nifty-1.3.xsd http://nifty-gui.sourceforge.net/nifty-1.3.xsd">
+    <useStyles filename="nifty-default-styles.xml" />
+    <useControls filename="nifty-default-controls.xml" />
+
+    <screen id="start" controller="org.sw7d.archeology.gui.SelectModuleController">
+        <layer childLayout="center">
+            <panel id="panel" height="50%" width="50%" align="center" valign="center" childLayout="center" visibleToMouse="true">
+                <control name="label" text="Select modules to display" align="left" valign="top" />
+                <control id="myListBox" width="100%" height="50%" align="center" 
+                     valign="center" name="listBox" vertical="optional" horizontal="optional" 
+                     displayItems="16" selectionMode="Multiple" />
+                <control id="doneButton" name="button" label="Done" align = "right" valign="bottom" />
+            </panel>
+        </layer>
+    </screen>
+</nifty>

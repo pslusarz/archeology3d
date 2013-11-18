@@ -29,6 +29,8 @@ import com.jme3.font.BitmapFont
 import com.jme3.font.Rectangle
 import com.jme3.math.FastMath
 import com.jme3.renderer.queue.RenderQueue.Bucket
+import com.jme3.niftygui.NiftyJmeDisplay
+import de.lessvoid.nifty.Nifty
 /**
  *
  * @author ps
@@ -42,11 +44,12 @@ class GroovyMain extends SimpleApplication {
     Node pivot
     Material mat, selectedMaterial, originMaterial
     Modules modules
+    List<String> selectedModules
     Map<String, Geometry> spatialsByName = [:]
     def javaFiles
     def javaNames
     def namesByPopularity
-    final int MAX_CLASSES = 3000
+    final int MAX_CLASSES = 100
     Geometry selected
     BitmapText backgroundOperation
     BitmapText currentSelection
@@ -57,6 +60,7 @@ class GroovyMain extends SimpleApplication {
     
     @Override
     void simpleInitApp() {
+
         pivot = new Node(pivot)   
         def al = new AmbientLight()
         al.setColor(ColorRGBA.White.mult(0.5f))
@@ -83,6 +87,14 @@ class GroovyMain extends SimpleApplication {
         selectedMaterial = makeMaterial("Common/MatDefs/Water/Textures/caustics.jpg")
         originMaterial = makeMaterial("Common/MatDefs/Water/Textures/foam.jpg")
         //makeQuickGraph()
+        
+        NiftyJmeDisplay niftyDisplay = new NiftyJmeDisplay(assetManager,
+                inputManager,
+                audioRenderer,
+                guiViewPort, 2048, 2048);
+        nifty = niftyDisplay.getNifty();
+        guiViewPort.addProcessor(niftyDisplay);
+        
         makeGraphFromPickle()
 
         
@@ -92,6 +104,7 @@ class GroovyMain extends SimpleApplication {
     
     def initKeys() {
         handleAction("Skip", new KeyTrigger(KeyInput.KEY_J), {boolean keyPressed, float tpf -> if (!keyPressed) {flyCam.moveCamera(10, false)}})
+        handleAction("SelectModules", new KeyTrigger(KeyInput.KEY_M), {boolean keyPressed, float tpf -> if (!keyPressed) {displaySelectModulesDialog()}})
         handleAction("Select", new MouseButtonTrigger(MouseInput.BUTTON_LEFT), 
             {boolean keyPressed, float tpf -> if (!keyPressed) {
                     CollisionResults results = new CollisionResults()
@@ -251,6 +264,7 @@ class GroovyMain extends SimpleApplication {
         new Thread() {
             void run() {               
                 modules = Modules.create()
+                selectedModules = modules.collect {it.name}
         
                 javaFiles = modules*.files.flatten().findAll{!it.javaName()?.startsWith('java') && it.extension() == 'java'}
                 javaNames = javaFiles*.javaName()
@@ -329,13 +343,37 @@ class GroovyMain extends SimpleApplication {
     
     void makeBox(String projectName, int popularity, int imports, int size) {
         //size 2 box, useful for drilling down in heavily populated zones
-        //Box b = new Box(new Vector3f(popularity / 10,imports / 10, size / 100-2), new Vector3f(popularity / 10 + 1,imports / 10+1, size/100));
-        Box b = new Box(new Vector3f(popularity / 10,imports / 10, 0), new Vector3f(popularity / 10 + 1,imports / 10+1, size/100));
+        Box b = new Box(new Vector3f(popularity / 5,imports / 5, size / 100-3), new Vector3f(popularity / 5 + 1,imports / 5+1, size/100));
+        //Box b = new Box(new Vector3f(popularity / 10,imports / 10, 0), new Vector3f(popularity / 10 + 1,imports / 10+1, size/100));
         Geometry geom = new Geometry(projectName, b);
         spatialsByName[projectName] = geom
         TangentBinormalGenerator.generate(b);
         geom.setMaterial(mat);
         pivot.attachChild(geom);     
+    }
+    
+    boolean displayingSelectModulesDialog = false
+    Nifty nifty
+    void displaySelectModulesDialog() {
+       if (displayingSelectModulesDialog) { return}
+       displayingSelectModulesDialog = true
+       
+                
+        SelectModuleController controller = new SelectModuleController(app: this);
+        nifty.fromXml("Interface/selectModule.xml", "start", controller);
+
+        flyCam.setEnabled(false);
+        inputManager.setCursorVisible(true);
+    }
+    
+    void doneSelectingModules(List<String> selectedModules)  {
+        displayingSelectModulesDialog = false
+        nifty.exit()
+        flyCam.setEnabled(true);
+        inputManager.setCursorVisible(false);
+        List<ArcheologyFile> selectedModuleFiles = modules.findAll {selectedModules.contains(it.name)}*.files.flatten()
+        this.selectedModules = selectedModules
+        displayAllMeetingCriteria {Geometry toBeDisplayed -> selectedModuleFiles.find {it.javaName() == toBeDisplayed.name}}
     }
 	
 }
