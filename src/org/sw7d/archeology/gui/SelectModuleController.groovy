@@ -20,18 +20,21 @@ import jme3test.helloworld.HelloJME3
 class SelectModuleController implements ScreenController {
     
     GroovyMain app
+    ListBox theBox
     
     List<String> selection = []
     
     public void bind(Nifty nifty, Screen screen) {
         System.out.println("bind( " + screen.getScreenId() + ")");
-        ListBox theBox = nifty.getScreen("start").findNiftyControl("myListBox", ListBox.class);
+        theBox = nifty.getScreen("start").findNiftyControl("myListBox", ListBox.class);
         app.modules.each {
           theBox.addItem(it.name)
           if (app.selectedModules.contains(it.name)) {
                   theBox.selectItem(it.name)
-          }
+          }   
         }
+        selection.clear()
+        selection.addAll(app.modules.collect {it.name})
     }
 
     public void onStartScreen() {
@@ -45,15 +48,32 @@ class SelectModuleController implements ScreenController {
   @NiftyEventSubscriber(id="myListBox")
   public void onMyListBoxSelectionChanged(final String id, final ListBoxSelectionChangedEvent<String> event) {
     selection = event.getSelection();
-    for (String selectedItem : selection) {
-      System.out.println("listbox selection [" + selectedItem + "]");
-    }
+    println "DEBUG: selection changed to: "+selection
   }
   
     
   @NiftyEventSubscriber(id="doneButton")
   public void onDoneButtonClicked(final String id, final ButtonClickedEvent event) {
+      println "DEBUG: done selecting, final selection: "+selection
       app.doneSelectingModules(selection)
+      
+  }
+  
+  @NiftyEventSubscriber(id="selectAllButton")
+  public void onSelectAllButtonClicked(final String id, final ButtonClickedEvent event) {
+      theBox.items.each {
+          theBox.selectItem(it)
+      }
+      selection = theBox.items
+  }
+  
+  @NiftyEventSubscriber(id="selectNoneButton")
+  public void onSelectNoneButtonClicked(final String id, final ButtonClickedEvent event) {
+      theBox.items.each {
+          theBox.deselectItem(it)
+      }
+      selection = []
+      println "DEBUG: resetting selection"
   }
 }
 

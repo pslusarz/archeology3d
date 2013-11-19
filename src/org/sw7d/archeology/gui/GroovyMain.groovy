@@ -45,6 +45,7 @@ class GroovyMain extends SimpleApplication {
     Material mat, selectedMaterial, originMaterial
     Modules modules
     List<String> selectedModules
+    Map<String, ArcheologyFile> selectedFilesByName = [:]
     Map<String, Geometry> spatialsByName = [:]
     def javaFiles
     def javaNames
@@ -54,7 +55,9 @@ class GroovyMain extends SimpleApplication {
     BitmapText backgroundOperation
     BitmapText currentSelection
     BitmapText selectionOrigin
+    BitmapText help
     boolean loadedModules = false
+    
     
     int currentModule = 0
     
@@ -89,11 +92,12 @@ class GroovyMain extends SimpleApplication {
         //makeQuickGraph()
         
         NiftyJmeDisplay niftyDisplay = new NiftyJmeDisplay(assetManager,
-                inputManager,
-                audioRenderer,
-                guiViewPort, 2048, 2048);
+            inputManager,
+            audioRenderer,
+            guiViewPort, 2048, 2048);
         nifty = niftyDisplay.getNifty();
         guiViewPort.addProcessor(niftyDisplay);
+        
         
         makeGraphFromPickle()
 
@@ -104,7 +108,7 @@ class GroovyMain extends SimpleApplication {
     
     def initKeys() {
         handleAction("Skip", new KeyTrigger(KeyInput.KEY_J), {boolean keyPressed, float tpf -> if (!keyPressed) {flyCam.moveCamera(10, false)}})
-        handleAction("SelectModules", new KeyTrigger(KeyInput.KEY_M), {boolean keyPressed, float tpf -> if (!keyPressed) {displaySelectModulesDialog()}})
+        handleAction("SelectModules", new KeyTrigger(KeyInput.KEY_L), {boolean keyPressed, float tpf -> if (!keyPressed && loadedModules) {displaySelectModulesDialog()}})
         handleAction("Select", new MouseButtonTrigger(MouseInput.BUTTON_LEFT), 
             {boolean keyPressed, float tpf -> if (!keyPressed) {
                     CollisionResults results = new CollisionResults()
@@ -116,39 +120,38 @@ class GroovyMain extends SimpleApplication {
             })
         handleAction("Users", new KeyTrigger(KeyInput.KEY_K), 
             {boolean keyPressed, float tpf -> if (!keyPressed) {
-                    displayAllMeetingCriteria {Geometry toBeDisplayed -> modules.findFirstClassFile(toBeDisplayed.name).imports?.contains(selected.name)}  
+                    displayAllMeetingCriteria {Geometry toBeDisplayed -> !selected || toBeDisplayed == selected || onlySelectedModules().findFirstClassFile(toBeDisplayed.name).imports?.contains(selected.name)}  
                 }
             })
          
         handleAction("Imports", new KeyTrigger(KeyInput.KEY_I), 
             {boolean keyPressed, float tpf -> if (!keyPressed) {
-                    displayAllMeetingCriteria {Geometry toBeDisplayed ->  modules.findFirstClassFile(selected.name).imports.contains(toBeDisplayed.name)}
+                    displayAllMeetingCriteria {Geometry toBeDisplayed ->  !selected || toBeDisplayed == selected || selectedFilesByName[selected.name].imports.contains(toBeDisplayed.name)}
                 }
             })
         
     }
     
+    Modules onlySelectedModules() {
+        Modules result = new Modules()
+        result.addAll( modules.findAll {selectedModules.contains(it.name)})
+        return result
+    }
+    
     void displayAllMeetingCriteria(Closure criteria) {
         selectionOrigin.text = ""
         spatialsByName.each { String name, Geometry currentSpatial ->
-
-            if (selected) {
-                if (selected == currentSpatial) {
-                    selected.setMaterial(originMaterial)
-                    selectionOrigin.text = "Origin: "+selected.name
-                    println " > Origin: "+selected.name
-                } else {
-                    if (!criteria.call(currentSpatial)) {
-                        pivot.detachChild(currentSpatial) 
-                    } else {
-                        println "    "+currentSpatial.name
-                        reset(currentSpatial)
-                    }
-                }                            
+            if (!selectedFilesByName[currentSpatial.name] || !criteria.call(currentSpatial)) {
+                pivot.detachChild(currentSpatial) 
             } else {
                 reset(currentSpatial)
             }
-                         
+            
+            if (selected == currentSpatial) {
+                selected.setMaterial(originMaterial)
+                selectionOrigin.text = "Origin: "+selected.name
+
+            }                         
         }   
     }
     
@@ -191,7 +194,9 @@ class GroovyMain extends SimpleApplication {
             (float) (settings.getWidth() / 2 - ch.getLineWidth()/2), (float) (settings.getHeight() / 2 + ch.getLineHeight()/2), 150f);
         guiNode.attachChild(ch);
         
-        backgroundOperation = makeHUDText(10, settings.getHeight() - guiFont.charSet.lineHeight, ColorRGBA.Red)       
+        help = makeHUDText(10, settings.getHeight() - guiFont.charSet.lineHeight, ColorRGBA.Blue) 
+        help.text = "Esc - quit, click - select, K - selection importers, I - selection imports, L - select modules, J - zoom"
+        backgroundOperation = makeHUDText(10, settings.getHeight() - guiFont.charSet.lineHeight - guiFont.charSet.lineHeight *1.5, ColorRGBA.Red)       
         currentSelection = makeHUDText(settings.getWidth() / 2.5, guiFont.charSet.lineHeight, ColorRGBA.Orange)       
         selectionOrigin = makeHUDText(10, guiFont.charSet.lineHeight, ColorRGBA.Blue)
 
@@ -264,7 +269,7 @@ class GroovyMain extends SimpleApplication {
         new Thread() {
             void run() {               
                 modules = Modules.create()
-                selectedModules = modules.collect {it.name}
+                selectModules (modules.collect {it.name})
         
                 javaFiles = modules*.files.flatten().findAll{!it.javaName()?.startsWith('java') && it.extension() == 'java'}
                 javaNames = javaFiles*.javaName()
@@ -354,26 +359,37 @@ class GroovyMain extends SimpleApplication {
     
     boolean displayingSelectModulesDialog = false
     Nifty nifty
+    
     void displaySelectModulesDialog() {
-       if (displayingSelectModulesDialog) { return}
-       displayingSelectModulesDialog = true
-       
-                
-        SelectModuleController controller = new SelectModuleController(app: this);
-        nifty.fromXml("Interface/selectModule.xml", "start", controller);
+        if (displayingSelectModulesDialog) { return}
+        displayingSelectModulesDialog = true
+        nifty.fromXml("Interface/selectModule.xml", "start", new SelectModuleController(app: this));
 
         flyCam.setEnabled(false);
         inputManager.setCursorVisible(true);
     }
     
-    void doneSelectingModules(List<String> selectedModules)  {
-        displayingSelectModulesDialog = false
+    void doneSelectingModules(List<String> selectedModules2)  { 
+        println "Selected modules: "+selectedModules2
         nifty.exit()
         flyCam.setEnabled(true);
         inputManager.setCursorVisible(false);
-        List<ArcheologyFile> selectedModuleFiles = modules.findAll {selectedModules.contains(it.name)}*.files.flatten()
-        this.selectedModules = selectedModules
-        displayAllMeetingCriteria {Geometry toBeDisplayed -> selectedModuleFiles.find {it.javaName() == toBeDisplayed.name}}
+        selectModules(selectedModules2)
+        
+        displayAllMeetingCriteria {Geometry toBeDisplayed -> true}
+        displayingSelectModulesDialog = false
+    }
+    
+    def selectModules(List<String> selectedModules2) {
+        List<ArcheologyFile> selectedModuleFiles = modules.findAll {selectedModules2.contains(it.name)}*.files.flatten()
+        selectedFilesByName.clear()
+        selectedModuleFiles.each {
+            selectedFilesByName[it.javaName()] = it
+        }
+        this.selectedModules = selectedModules2
+        if (selected && !selectedFilesByName[selected.name]) {
+            select(null)
+        }
     }
 	
 }

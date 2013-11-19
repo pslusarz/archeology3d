@@ -5,12 +5,14 @@
 
     <screen id="start" controller="org.sw7d.archeology.gui.SelectModuleController">
         <layer childLayout="center">
-            <panel id="panel" height="50%" width="50%" align="center" valign="center" childLayout="center" visibleToMouse="true">
-                <control name="label" text="Select modules to display" align="left" valign="top" />
-                <control id="myListBox" width="100%" height="50%" align="center" 
+            <panel id="panel" height="90%" width="30%" align="right" valign="top" childLayout="center" visibleToMouse="true">
+                <control name="label" text="Select modules to display" align="left" valign="top" color="#f00f"/>
+                <control id="myListBox" width="100%" height="90%" align="center" 
                      valign="center" name="listBox" vertical="optional" horizontal="optional" 
-                     displayItems="16" selectionMode="Multiple" />
+                     displayItems="35" selectionMode="Multiple" />
                 <control id="doneButton" name="button" label="Done" align = "right" valign="bottom" />
+                <control id="selectAllButton" name="button" label="All" align = "left" valign="bottom" />
+                <control id="selectNoneButton" name="button" label="None" align = "center" valign="bottom" />
             </panel>
         </layer>
     </screen>
