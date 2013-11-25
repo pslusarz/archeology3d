@@ -63,7 +63,6 @@ class GroovyMain extends SimpleApplication {
     
     @Override
     void simpleInitApp() {
-
         pivot = new Node(pivot)   
         def al = new AmbientLight()
         al.setColor(ColorRGBA.White.mult(0.5f))
@@ -75,7 +74,7 @@ class GroovyMain extends SimpleApplication {
         markOrigin()
         
         rootNode.attachChild(pivot)
-      
+      //jme3tools.optimize.GeometryBatchFactory.optimize(rootNode);
   
         pivot.rotate(-1.5f, 0f, 0f)
 
@@ -91,12 +90,19 @@ class GroovyMain extends SimpleApplication {
         originMaterial = makeMaterial("Common/MatDefs/Water/Textures/foam.jpg")
         //makeQuickGraph()
         
+        SelectModuleController selectModuleController = new SelectModuleController()
+        stateManager.attach(selectModuleController)
+        
         NiftyJmeDisplay niftyDisplay = new NiftyJmeDisplay(assetManager,
             inputManager,
             audioRenderer,
-            guiViewPort, 2048, 2048);
+            guiViewPort);
         nifty = niftyDisplay.getNifty();
         guiViewPort.addProcessor(niftyDisplay);
+        nifty.validateXml("Interface/selectModule.xml")
+        nifty.fromXml("Interface/selectModule.xml", "nothing", selectModuleController)
+        
+        
         
         
         makeGraphFromPickle()
@@ -107,8 +113,10 @@ class GroovyMain extends SimpleApplication {
     }
     
     def initKeys() {
-        handleAction("Skip", new KeyTrigger(KeyInput.KEY_J), {boolean keyPressed, float tpf -> if (!keyPressed) {flyCam.moveCamera(10, false)}})
+        handleAction("ZoomOut", new KeyTrigger(KeyInput.KEY_H), {boolean keyPressed, float tpf -> if (!keyPressed) {flyCam.moveCamera(-10, false)}})
+        handleAction("ZoomIn", new KeyTrigger(KeyInput.KEY_J), {boolean keyPressed, float tpf -> if (!keyPressed) {flyCam.moveCamera(10, false)}})
         handleAction("SelectModules", new KeyTrigger(KeyInput.KEY_L), {boolean keyPressed, float tpf -> if (!keyPressed && loadedModules) {displaySelectModulesDialog()}})
+        handleAction("ViewSource", new KeyTrigger(KeyInput.KEY_V), {boolean keyPressed, float tpf -> if (!keyPressed) {displayViewSource()}})
         handleAction("Select", new MouseButtonTrigger(MouseInput.BUTTON_LEFT), 
             {boolean keyPressed, float tpf -> if (!keyPressed) {
                     CollisionResults results = new CollisionResults()
@@ -195,7 +203,7 @@ class GroovyMain extends SimpleApplication {
         guiNode.attachChild(ch);
         
         help = makeHUDText(10, settings.getHeight() - guiFont.charSet.lineHeight, ColorRGBA.Blue) 
-        help.text = "Esc - quit, click - select, K - selection importers, I - selection imports, L - select modules, J - zoom"
+        help.text = "Esc - quit, click - select, K - selection importers, I - selection imports, L - select modules, H/J - zoom"
         backgroundOperation = makeHUDText(10, settings.getHeight() - guiFont.charSet.lineHeight - guiFont.charSet.lineHeight *1.5, ColorRGBA.Red)       
         currentSelection = makeHUDText(settings.getWidth() / 2.5, guiFont.charSet.lineHeight, ColorRGBA.Orange)       
         selectionOrigin = makeHUDText(10, guiFont.charSet.lineHeight, ColorRGBA.Blue)
@@ -358,20 +366,37 @@ class GroovyMain extends SimpleApplication {
     }
     
     boolean displayingSelectModulesDialog = false
+    boolean displayingViewSource = false
     Nifty nifty
     
+    void displayViewSource() {
+        if (displayingViewSource) {
+            nifty.gotoScreen("nothing")
+            flyCam.setEnabled(true);
+            inputManager.setCursorVisible(false);
+            displayingViewSource = false
+        } else if (selected) {
+          displayingViewSource = true
+          nifty.gotoScreen("source")
+          //nifty.fromXml("Interface/displaySource.xml", "start", new ShowSourceController());
+          //flyCam.setEnabled(false);
+          //inputManager.setCursorVisible(true);
+        }
+        
+    }
+     
     void displaySelectModulesDialog() {
         if (displayingSelectModulesDialog) { return}
         displayingSelectModulesDialog = true
-        nifty.fromXml("Interface/selectModule.xml", "start", new SelectModuleController(app: this));
-
+        //nifty.fromXml("Interface/selectModule.xml", "start", new SelectModuleController(app: this));
+        nifty.gotoScreen("start")
         flyCam.setEnabled(false);
         inputManager.setCursorVisible(true);
     }
     
     void doneSelectingModules(List<String> selectedModules2)  { 
         println "Selected modules: "+selectedModules2
-        nifty.exit()
+        nifty.gotoScreen("nothing")
         flyCam.setEnabled(true);
         inputManager.setCursorVisible(false);
         selectModules(selectedModules2)

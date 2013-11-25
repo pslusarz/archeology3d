@@ -13,20 +13,26 @@ import de.lessvoid.nifty.NiftyEventSubscriber
 import de.lessvoid.nifty.controls.ListBoxSelectionChangedEvent
 import de.lessvoid.nifty.controls.ButtonClickedEvent
 import jme3test.helloworld.HelloJME3
+import com.jme3.app.state.AbstractAppState
+import com.jme3.app.state.AppStateManager
+import com.jme3.app.Application
 /**
  *
  * @author ps
  */
-class SelectModuleController implements ScreenController {
+public class SelectModuleController extends AbstractAppState implements ScreenController {
     
     GroovyMain app
     ListBox theBox
+    Screen screen
     
     List<String> selection = []
     
     public void bind(Nifty nifty, Screen screen) {
         System.out.println("bind( " + screen.getScreenId() + ")");
-        theBox = nifty.getScreen("start").findNiftyControl("myListBox", ListBox.class);
+        theBox = screen.findNiftyControl("myListBox", ListBox.class);
+        this.screen = screen
+        
         app.modules.each {
           theBox.addItem(it.name)
           if (app.selectedModules.contains(it.name)) {
@@ -35,6 +41,7 @@ class SelectModuleController implements ScreenController {
         }
         selection.clear()
         selection.addAll(app.modules.collect {it.name})
+        
     }
 
     public void onStartScreen() {
@@ -75,5 +82,13 @@ class SelectModuleController implements ScreenController {
       selection = []
       println "DEBUG: resetting selection"
   }
+  
+  @Override
+  public void initialize(AppStateManager stateManager, Application app) {
+    super.initialize(stateManager, app);
+    this.app= app as GroovyMain;
+    
+  }
+  
 }
 

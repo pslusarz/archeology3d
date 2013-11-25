@@ -15,5 +15,16 @@
                 <control id="selectNoneButton" name="button" label="None" align = "center" valign="bottom" />
             </panel>
         </layer>
-    </screen>
+    </screen> 
+    <screen id="source" controller="org.sw7d.archeology.gui.ShowSourceController">
+        <layer childLayout="center">
+            <panel id="panel" height="90%" width="30%" align="left" valign="top" childLayout="center" visibleToMouse="true">
+                <control id="sourcecode" name="label" text="XXxxxxx XXXXXX" align="left" valign="top" width="90%" height="90%" color="#f00f"/>
+            </panel>
+        </layer>
+    </screen> 
+    <screen id="nothing">
+      <layer id="baseLayer" childLayout="center">
+      </layer>
+    </screen>     
 </nifty>
