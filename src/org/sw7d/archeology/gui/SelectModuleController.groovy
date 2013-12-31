@@ -12,7 +12,6 @@ import de.lessvoid.nifty.controls.ListBox
 import de.lessvoid.nifty.NiftyEventSubscriber
 import de.lessvoid.nifty.controls.ListBoxSelectionChangedEvent
 import de.lessvoid.nifty.controls.ButtonClickedEvent
-import jme3test.helloworld.HelloJME3
 import com.jme3.app.state.AbstractAppState
 import com.jme3.app.state.AppStateManager
 import com.jme3.app.Application

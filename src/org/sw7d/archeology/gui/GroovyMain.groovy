@@ -89,9 +89,11 @@ class GroovyMain extends SimpleApplication {
         selectedMaterial = makeMaterial("Common/MatDefs/Water/Textures/caustics.jpg")
         originMaterial = makeMaterial("Common/MatDefs/Water/Textures/foam.jpg")
         //makeQuickGraph()
-        
+
+        ShowSourceController showSourceController = new ShowSourceController()
         SelectModuleController selectModuleController = new SelectModuleController()
         stateManager.attach(selectModuleController)
+        stateManager.attach(showSourceController)
         
         NiftyJmeDisplay niftyDisplay = new NiftyJmeDisplay(assetManager,
             inputManager,
@@ -100,7 +102,7 @@ class GroovyMain extends SimpleApplication {
         nifty = niftyDisplay.getNifty();
         guiViewPort.addProcessor(niftyDisplay);
         nifty.validateXml("Interface/selectModule.xml")
-        nifty.fromXml("Interface/selectModule.xml", "nothing", selectModuleController)
+        nifty.fromXml("Interface/selectModule.xml", "nothing", selectModuleController, showSourceController)
         
         
         
@@ -377,10 +379,9 @@ class GroovyMain extends SimpleApplication {
             displayingViewSource = false
         } else if (selected) {
           displayingViewSource = true
+          flyCam.setEnabled(false);
+          inputManager.setCursorVisible(true);
           nifty.gotoScreen("source")
-          //nifty.fromXml("Interface/displaySource.xml", "start", new ShowSourceController());
-          //flyCam.setEnabled(false);
-          //inputManager.setCursorVisible(true);
         }
         
     }
