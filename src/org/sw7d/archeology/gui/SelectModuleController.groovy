@@ -15,10 +15,7 @@ import de.lessvoid.nifty.controls.ButtonClickedEvent
 import com.jme3.app.state.AbstractAppState
 import com.jme3.app.state.AppStateManager
 import com.jme3.app.Application
-/**
- *
- * @author ps
- */
+
 public class SelectModuleController extends AbstractAppState implements ScreenController {
     
     GroovyMain app
@@ -32,14 +29,14 @@ public class SelectModuleController extends AbstractAppState implements ScreenCo
         theBox = screen.findNiftyControl("myListBox", ListBox.class);
         this.screen = screen
         
-        app.modules.each {
+        app.availableModules.each {
           theBox.addItem(it.name)
           if (app.selectedModules.contains(it.name)) {
                   theBox.selectItem(it.name)
           }   
         }
         selection.clear()
-        selection.addAll(app.modules.collect {it.name})
+        selection.addAll(app.availableModules.collect {it.name})
         
     }
 

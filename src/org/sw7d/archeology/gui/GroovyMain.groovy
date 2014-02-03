@@ -31,10 +31,9 @@ import com.jme3.math.FastMath
 import com.jme3.renderer.queue.RenderQueue.Bucket
 import com.jme3.niftygui.NiftyJmeDisplay
 import de.lessvoid.nifty.Nifty
-/**
- *
- * @author ps
- */
+import org.sw7d.archeology.data.DataPointProvider
+import org.sw7d.archeology.data.DataPoint3d
+
 class GroovyMain extends SimpleApplication {
     static void main(args){
         
@@ -43,26 +42,19 @@ class GroovyMain extends SimpleApplication {
     
     Node pivot
     Material mat, selectedMaterial, originMaterial
-    Modules modules
     List<String> selectedModules
     Map<String, ArcheologyFile> selectedFilesByName = [:]
     Map<String, Geometry> spatialsByName = [:]
-    def javaFiles
-    def javaNames
-    def namesByPopularity
-    final int MAX_CLASSES = 100
     Geometry selected
     BitmapText backgroundOperation
     BitmapText currentSelection
     BitmapText selectionOrigin
     BitmapText help
-    boolean loadedModules = false
-    
-    
-    int currentModule = 0
+    DataPointProvider provider
     
     @Override
     void simpleInitApp() {
+        provider = new DataPointProvider(loadedModules: false, maxDataPoints: 100)
         pivot = new Node(pivot)   
         def al = new AmbientLight()
         al.setColor(ColorRGBA.White.mult(0.5f))
@@ -117,7 +109,7 @@ class GroovyMain extends SimpleApplication {
     def initKeys() {
         handleAction("ZoomOut", new KeyTrigger(KeyInput.KEY_H), {boolean keyPressed, float tpf -> if (!keyPressed) {flyCam.moveCamera(-10, false)}})
         handleAction("ZoomIn", new KeyTrigger(KeyInput.KEY_J), {boolean keyPressed, float tpf -> if (!keyPressed) {flyCam.moveCamera(10, false)}})
-        handleAction("SelectModules", new KeyTrigger(KeyInput.KEY_L), {boolean keyPressed, float tpf -> if (!keyPressed && loadedModules) {displaySelectModulesDialog()}})
+        handleAction("SelectModules", new KeyTrigger(KeyInput.KEY_L), {boolean keyPressed, float tpf -> if (!keyPressed && provider.loadedModules) {displaySelectModulesDialog()}})
         handleAction("ViewSource", new KeyTrigger(KeyInput.KEY_V), {boolean keyPressed, float tpf -> if (!keyPressed) {displayViewSource()}})
         handleAction("Select", new MouseButtonTrigger(MouseInput.BUTTON_LEFT), 
             {boolean keyPressed, float tpf -> if (!keyPressed) {
@@ -144,7 +136,7 @@ class GroovyMain extends SimpleApplication {
     
     Modules onlySelectedModules() {
         Modules result = new Modules()
-        result.addAll( modules.findAll {selectedModules.contains(it.name)})
+        result.addAll( provider.modules.findAll {selectedModules.contains(it.name)})
         return result
     }
     
@@ -205,7 +197,7 @@ class GroovyMain extends SimpleApplication {
         guiNode.attachChild(ch);
         
         help = makeHUDText(10, settings.getHeight() - guiFont.charSet.lineHeight, ColorRGBA.Blue) 
-        help.text = "Esc - quit, click - select, K - selection importers, I - selection imports, L - select modules, H/J - zoom"
+        help.text = "Esc - quit, click - select, K - selection importers, I - selection imports, L - select modules, V - view source, H/J - zoom"
         backgroundOperation = makeHUDText(10, settings.getHeight() - guiFont.charSet.lineHeight - guiFont.charSet.lineHeight *1.5, ColorRGBA.Red)       
         currentSelection = makeHUDText(settings.getWidth() / 2.5, guiFont.charSet.lineHeight, ColorRGBA.Orange)       
         selectionOrigin = makeHUDText(10, guiFont.charSet.lineHeight, ColorRGBA.Blue)
@@ -239,27 +231,17 @@ class GroovyMain extends SimpleApplication {
     
     @Override
     public void simpleUpdate(float tpf) {
-        if (!loadedModules) {
+        if (!provider.loadedModules) {
             if (System.currentTimeMillis() - lastUpdateTime > 1000) {
                 lastUpdateTime = System.currentTimeMillis()
                 backgroundOperation.text = backgroundOperation.text+"."
             }
             return
         }
-        if (modules && currentModule < namesByPopularity.size() && currentModule < MAX_CLASSES) {
-            currentModule++
-            def keys = []
-            keys.addAll(namesByPopularity.keySet())
-            def className = keys[currentModule]
-            def list = namesByPopularity[keys[currentModule]]
-        
-            ArcheologyFile javaFile = modules.findFirstClassFile(className)
-            if (javaFile) {
-                def javaImports = javaFile.imports.findAll{javaNames.contains(it)}
-                makeBox (javaFile.javaName(), list.size(), javaImports.size(), javaFile.linesCount)
-
-            }
-            backgroundOperation.text = "Initializing classes (${currentModule} / ${Math.min(MAX_CLASSES, namesByPopularity.size())})"
+        DataPoint3d dataPoint = provider.getNextDataPoint()
+        if (dataPoint) {
+            makeBox(dataPoint.name, dataPoint.x, dataPoint.y, dataPoint.z)
+            backgroundOperation.text = "Initializing classes (${provider.dataPointCompletionRatio})"
         } else {
             backgroundOperation.text = ""
         }
@@ -278,15 +260,10 @@ class GroovyMain extends SimpleApplication {
         backgroundOperation.setText("PATIENce MORTAL, loADING SOM3 DATAZ")
         new Thread() {
             void run() {               
-                modules = Modules.create()
-                selectModules (modules.collect {it.name})
-        
-                javaFiles = modules*.files.flatten().findAll{!it.javaName()?.startsWith('java') && it.extension() == 'java'}
-                javaNames = javaFiles*.javaName()
-                namesByPopularity = modules*.files*.imports.flatten().findAll{!it?.startsWith('java') && it}.groupBy {it}.sort {a, b -> -a.value.size() <=>-b.value.size()}
-        
+                provider.initModules()
+                selectModules (provider.modules.collect {it.name})      
                 backgroundOperation.setText("")
-                loadedModules = true
+                provider.loadedModules = true
             }
         }.start()
         
@@ -407,7 +384,7 @@ class GroovyMain extends SimpleApplication {
     }
     
     def selectModules(List<String> selectedModules2) {
-        List<ArcheologyFile> selectedModuleFiles = modules.findAll {selectedModules2.contains(it.name)}*.files.flatten()
+        List<ArcheologyFile> selectedModuleFiles = provider.modules.findAll {selectedModules2.contains(it.name)}*.files.flatten()
         selectedFilesByName.clear()
         selectedModuleFiles.each {
             selectedFilesByName[it.javaName()] = it
@@ -416,6 +393,10 @@ class GroovyMain extends SimpleApplication {
         if (selected && !selectedFilesByName[selected.name]) {
             select(null)
         }
+    }
+    
+    Modules getAvailableModules() {
+        provider.modules
     }
 	
 }
