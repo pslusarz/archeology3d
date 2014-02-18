@@ -66,7 +66,7 @@ class GroovyMain extends SimpleApplication {
         markOrigin()
         
         rootNode.attachChild(pivot)
-      //jme3tools.optimize.GeometryBatchFactory.optimize(rootNode);
+        //jme3tools.optimize.GeometryBatchFactory.optimize(rootNode);
   
         pivot.rotate(-1.5f, 0f, 0f)
 
@@ -80,7 +80,6 @@ class GroovyMain extends SimpleApplication {
         mat = makeMaterial("Common/MatDefs/SSAO/Textures/random.png")
         selectedMaterial = makeMaterial("Common/MatDefs/Water/Textures/caustics.jpg")
         originMaterial = makeMaterial("Common/MatDefs/Water/Textures/foam.jpg")
-        //makeQuickGraph()
 
         ShowSourceController showSourceController = new ShowSourceController()
         SelectModuleController selectModuleController = new SelectModuleController()
@@ -132,6 +131,20 @@ class GroovyMain extends SimpleApplication {
                 }
             })
         
+        handleAction("RunScript", new KeyTrigger(KeyInput.KEY_R), 
+            {boolean keyPressed, float tpf -> if (!keyPressed) {
+                    Binding binding = new Binding();
+                    binding.setVariable("foo", new Integer(2));
+                    binding.setVariable("modules", provider.modules)
+                    GroovyShell shell = new GroovyShell(binding);
+                    File scriptFile = new File("src/org/sw7d/archeology/scripts/DefaultScript.groovy")
+                    println scriptFile.absolutePath
+                    println "Exists? "+scriptFile.exists()
+                    Object value = shell.evaluate(scriptFile);
+                    println "returned value: "+value
+                }
+            })
+        
     }
     
     Modules onlySelectedModules() {
@@ -179,7 +192,7 @@ class GroovyMain extends SimpleApplication {
             void onAction(String name, boolean keyPressed, float tpf) {
                 if (name == actionName) {
                     if (!keyPressed) println "======== $actionName =========="
-                    handler.call(keyPressed, tpf)
+                    handler.call(keyPressed, tpf) //TODO: is this a bug? called several times while key down?
                 }
             }
         }
@@ -248,13 +261,6 @@ class GroovyMain extends SimpleApplication {
         
            
     } 
-    
-    void makeQuickGraph() {
-        Apache5000.classes.each {
-            makeBox(it.name, it.popularity, it.imports, it.lines)
-        }
-    }
-    
     
     void makeGraphFromPickle() {
         backgroundOperation.setText("PATIENce MORTAL, loADING SOM3 DATAZ")
@@ -355,10 +361,10 @@ class GroovyMain extends SimpleApplication {
             inputManager.setCursorVisible(false);
             displayingViewSource = false
         } else if (selected) {
-          displayingViewSource = true
-          flyCam.setEnabled(false);
-          inputManager.setCursorVisible(true);
-          nifty.gotoScreen("source")
+            displayingViewSource = true
+            flyCam.setEnabled(false);
+            inputManager.setCursorVisible(true);
+            nifty.gotoScreen("source")
         }
         
     }
