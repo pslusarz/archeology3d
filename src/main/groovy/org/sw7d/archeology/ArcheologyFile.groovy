@@ -16,7 +16,7 @@ class ArcheologyFile extends File {
 		  List<String> lines = file.readLines()
 		  linesCount = lines.size()
 		  imports = initImports(lines)
-          javaPackage = initJavaPackage(lines)
+                  javaPackage = initJavaPackage(lines)
 	  }	  
   }
   
@@ -30,7 +30,7 @@ class ArcheologyFile extends File {
 
   String javaName() {
       if (['groovy', 'java'].contains(extension())) {
-        return javaPackage+"."+ (name - ('.'+extension()))
+        return javaPackage?:'(default)'+"."+ (name - ('.'+extension()))
       } else {
           return null
       }

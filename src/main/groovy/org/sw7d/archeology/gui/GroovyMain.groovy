@@ -137,10 +137,16 @@ class GroovyMain extends SimpleApplication {
                     binding.setVariable("foo", new Integer(2));
                     binding.setVariable("modules", provider.modules)
                     GroovyShell shell = new GroovyShell(binding);
-                    File scriptFile = new File("src/org/sw7d/archeology/scripts/DefaultScript.groovy")
+                    File scriptFile = new File("scripts/runtime/DefaultScript.groovy")
                     println scriptFile.absolutePath
                     println "Exists? "+scriptFile.exists()
-                    Object value = shell.evaluate(scriptFile);
+                    Object value
+                    try {
+                      value = shell.evaluate(scriptFile);
+                    } catch (Exception e) {
+                        e.printStackTrace()
+                        println "error evaluating script: "+e.getMessage()
+                    }
                     println "returned value: "+value
                 }
             })
@@ -210,7 +216,7 @@ class GroovyMain extends SimpleApplication {
         guiNode.attachChild(ch);
         
         help = makeHUDText(10, settings.getHeight() - guiFont.charSet.lineHeight, ColorRGBA.Blue) 
-        help.text = "Esc - quit, click - select, K - selection importers, I - selection imports, L - select modules, V - view source, H/J - zoom"
+        help.text = "Esc - quit, click - select, K - selection importers, I - selection imports, L - select modules, V - view source, H/J - zoom, R - run script"
         backgroundOperation = makeHUDText(10, settings.getHeight() - guiFont.charSet.lineHeight - guiFont.charSet.lineHeight *1.5, ColorRGBA.Red)       
         currentSelection = makeHUDText(settings.getWidth() / 2.5, guiFont.charSet.lineHeight, ColorRGBA.Orange)       
         selectionOrigin = makeHUDText(10, guiFont.charSet.lineHeight, ColorRGBA.Blue)

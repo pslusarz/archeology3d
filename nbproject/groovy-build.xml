@@ -8,7 +8,7 @@
 <project xmlns:j2seproject3="http://www.netbeans.org/ns/j2se-project/3" xmlns:j2seproject1="http://www.netbeans.org/ns/j2se-project/1" xmlns:jaxrpc="http://www.netbeans.org/ns/j2se-project/jax-rpc">
     <target name="-groovy-init-macrodef-javac">
         <macrodef name="javac" uri="http://www.netbeans.org/ns/j2se-project/3">
-            <attribute name="srcdir" default="${src.dir}"/>
+            <attribute name="srcdir" default="${src.runtime.dir}:${src.groovy.dir}"/>
             <attribute name="destdir" default="${build.classes.dir}"/>
             <attribute name="classpath" default="${javac.classpath}"/>
             <attribute name="includes" default="${includes}"/>
@@ -40,7 +40,7 @@
             </sequential>
         </macrodef>
         <macrodef name="depend" uri="http://www.netbeans.org/ns/j2se-project/3">
-            <attribute name="srcdir" default="${src.dir}"/>
+            <attribute name="srcdir" default="${src.runtime.dir}:${src.groovy.dir}"/>
             <attribute name="destdir" default="${build.classes.dir}"/>
             <attribute name="classpath" default="${javac.classpath}"/>
             <sequential>

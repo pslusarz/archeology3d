@@ -11,11 +11,14 @@
             </extension>
         </buildExtensions>
         <data xmlns="http://www.netbeans.org/ns/j2se-project/3">
-            <name>HelloSimpleApp</name>
+            <name>archeology3d</name>
             <source-roots>
-                <root id="src.dir"/>
+                <root id="src.runtime.dir"/>
+                <root id="src.groovy.dir"/>
             </source-roots>
-            <test-roots/>
+            <test-roots>
+                <root id="test.groovy.dir"/>
+            </test-roots>
         </data>
     </configuration>
 </project>
