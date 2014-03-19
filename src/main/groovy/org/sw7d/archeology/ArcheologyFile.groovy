@@ -30,7 +30,7 @@ class ArcheologyFile extends File {
 
   String javaName() {
       if (['groovy', 'java'].contains(extension())) {
-        return javaPackage?:'(default)'+"."+ (name - ('.'+extension()))
+        return (javaPackage?:'(default)')+"."+ (name - ('.'+extension()))
       } else {
           return null
       }
