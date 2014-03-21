@@ -47,6 +47,10 @@ class Module implements Serializable{
   public String gname() {
 	  name.replaceAll("-", "_")
   }
+  
+  public boolean isRepoGit() {
+      ['git', 'github', 'stash'].contains(repository)
+  }  
 
   public String toString() {
 	  String result = "$name -> $buildType ($repository)"
@@ -101,7 +105,7 @@ class Module implements Serializable{
 	  def currentDirfiles = dir.listFiles(MEANINGFULFILES)
 	  currentDirfiles.each {
 			  if ( !it.isDirectory()) {
-				  files << new ArcheologyFile(it)
+			      files << new ArcheologyFile(it, this)
 			  } else {
 				initFiles(it)
 			  }
