@@ -50,6 +50,14 @@ class Module implements Serializable{
   
   public boolean isRepoGit() {
       ['git', 'github', 'stash'].contains(repository)
+  } 
+  
+  String repoUrl() {
+      if (repository == 'github' && path.contains("/apache")) {
+         return "https://github.com/apache/${name}" 
+      } else {
+          return "file://${path}"
+      }
   }  
 
   public String toString() {
