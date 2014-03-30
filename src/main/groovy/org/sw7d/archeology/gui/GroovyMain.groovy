@@ -44,10 +44,9 @@ class GroovyMain extends SimpleApplication {
         settings.vSync = true
         settings.samples = 0
         settings.title = 'Archeology3D'
-        new GroovyMain(pauseOnLostFocus: false, displayStatView: false, displayFps: false, showSettings: false, settings: settings).start()
+        new GroovyMain(pauseOnLostFocus: false, displayStatView: true, displayFps: true, showSettings: false, settings: settings).start()
     }
     
-    Node pivot
     Material mat, selectedMaterial, originMaterial
     List<String> selectedModules
     Map<String, ArcheologyFile> selectedFilesByName = [:]
@@ -61,24 +60,21 @@ class GroovyMain extends SimpleApplication {
     
     @Override
     void simpleInitApp() {
-        provider = new DefaultDataPointProvider(maxDataPoints: 500)
-        pivot = new Node(pivot)   
+        provider = new DefaultDataPointProvider(maxDataPoints: 5000)
         def al = new AmbientLight()
         al.setColor(ColorRGBA.White.mult(0.5f))
-        pivot.addLight(al)
+        rootNode.addLight(al)
         
         viewPort.setBackgroundColor(ColorRGBA.White);
         makeLight(100,1500,1500, ColorRGBA.White) 
         
         markOrigin()
-        
-        rootNode.attachChild(pivot)
-  
-        pivot.rotate(-1.5f, 0f, 0f)
+
+        rootNode.rotate(-1.5f, 0f, 0f)
 
         cam.setLocation(new Vector3f(150f, 150f, -150f))
         cam.setRotation(new Quaternion(-1.5f, 0f, 0f, 1f))
-        cam.lookAt(new Vector3f(-150f, -130f, 150f), pivot.getLocalTranslation())
+        cam.lookAt(new Vector3f(-150f, -130f, 150f), rootNode.getLocalTranslation())
         flyCam.setMoveSpeed((float) (flyCam.getMoveSpeed() * 10f));
         
         initKeys()
@@ -121,7 +117,7 @@ class GroovyMain extends SimpleApplication {
             {boolean keyPressed, float tpf -> if (!keyPressed) {
                     CollisionResults results = new CollisionResults()
                     Ray ray = new Ray(cam.location, cam.direction)
-                    pivot.collideWith(ray, results)
+                    rootNode.collideWith(ray, results)
                     select(results.closestCollision?.geometry)
                     println results.closestCollision?.geometry?.name
                 }
@@ -157,7 +153,8 @@ class GroovyMain extends SimpleApplication {
                     if (value instanceof DataPointProvider) {
                         DataPointProvider newProvider = value as DataPointProvider
                         newProvider.loadedModules = false
-                        pivot.detachAllChildren()
+                        rootNode.detachAllChildren()
+                        spatialsByName.clear()
                         provider = newProvider
                         markOrigin()
                         newProvider.loadedModules = true
@@ -177,7 +174,7 @@ class GroovyMain extends SimpleApplication {
         selectionOrigin.text = ""
         spatialsByName.each { String name, Geometry currentSpatial ->
             if (!selectedFilesByName[currentSpatial.name] || !criteria.call(currentSpatial)) {
-                pivot.detachChild(currentSpatial) 
+                rootNode.detachChild(currentSpatial) 
             } else {
                 reset(currentSpatial)
             }
@@ -191,7 +188,7 @@ class GroovyMain extends SimpleApplication {
     }
     
     void reset(Geometry geometry) {
-        pivot.attachChild(geometry)
+        rootNode.attachChild(geometry)
         geometry.setMaterial(mat)
     }
     
@@ -279,7 +276,7 @@ class GroovyMain extends SimpleApplication {
         } else {
             if (lastBox) {
                 backgroundOperation.text = ""
-                //jme3tools.optimize.GeometryBatchFactory.optimize(pivot)
+                //jme3tools.optimize.GeometryBatchFactory.optimize(rootNode)
                 lastBox = false
             }
         }
@@ -308,7 +305,7 @@ class GroovyMain extends SimpleApplication {
         DirectionalLight sun = new DirectionalLight();
         sun.setDirection(sunVector);
         sun.setColor(color);
-        pivot.addLight(sun);
+        rootNode.addLight(sun);
         
     }
     
@@ -319,7 +316,7 @@ class GroovyMain extends SimpleApplication {
         Material mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");      
         mat.setColor("Color", color);
         geom.setMaterial(mat);
-        pivot.attachChild(geom) 
+        rootNode.attachChild(geom) 
     }
     
     void markOrigin() {
@@ -341,7 +338,7 @@ class GroovyMain extends SimpleApplication {
         txt.setText("< ${provider.getXYZLabels()[0]}");
         txt.rotate(0f, 0f, (float)FastMath.DEG_TO_RAD * (180));
         txt.setLocalTranslation(75f,-75f,0f)
-        pivot.attachChild(txt);
+        rootNode.attachChild(txt);
         
         BitmapText txt2 = new BitmapText(fnt, false);
         txt2.setBox(new Rectangle(0, 30, 100, 0));       
@@ -350,7 +347,7 @@ class GroovyMain extends SimpleApplication {
         txt2.setText("${provider.getXYZLabels()[1]} >");
         txt2.rotate(0f, 0f, (float)FastMath.DEG_TO_RAD * (90));
         txt2.setLocalTranslation(-25f, 30f, 0f)
-        pivot.attachChild(txt2);
+        rootNode.attachChild(txt2);
         
         BitmapText txt3 = new BitmapText(fnt, false);
         txt3.setBox(new Rectangle(0, 0, 100, 30));       
@@ -359,7 +356,7 @@ class GroovyMain extends SimpleApplication {
         txt3.setText("${provider.getXYZLabels()[2]} >");
         txt3.rotate((float)FastMath.DEG_TO_RAD * 45, (float)FastMath.DEG_TO_RAD * (90), (float)FastMath.DEG_TO_RAD * (180));
         txt3.setLocalTranslation(-100f,-120f,30f)
-        pivot.attachChild(txt3);
+        rootNode.attachChild(txt3);
         
         
     }
@@ -374,7 +371,7 @@ class GroovyMain extends SimpleApplication {
         spatialsByName[projectName] = geom
         TangentBinormalGenerator.generate(b);
         geom.setMaterial(mat);
-        pivot.attachChild(geom);     
+        rootNode.attachChild(geom);     
     }
     
     boolean displayingSelectModulesDialog = false

@@ -35,11 +35,13 @@ class DataPointProvider {
     }
     
     public DataPoint3d getNextDataPoint() {
-        currentModuleZeroBased++
-        if (exceedsMaxRequestedDataPoints() || currentModuleZeroBased >= dataPoints.size()) {
+        
+        if (exceedsMaxRequestedDataPoints() || currentModuleZeroBased >= dataPoints.size()-1) {
             return null;
+        } else {
+            currentModuleZeroBased++
+            return dataPoints[currentModuleZeroBased]
         }
-        return dataPoints[currentModuleZeroBased]
     }
     
     
