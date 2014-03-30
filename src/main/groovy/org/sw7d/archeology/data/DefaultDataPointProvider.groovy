@@ -33,26 +33,6 @@ class DefaultDataPointProvider extends DataPointProvider {
         ['Popularity', 'Imports', 'Size']
     }
     
-//    DataPoint3d getNextDataPoint() {
-//        currentModuleZeroBased++
-//        def keys = []
-//        keys.addAll(namesByPopularity.keySet())
-//        if (exceedsMaxRequestedDataPoints() || currentModuleZeroBased >= keys.size()) {
-//            return null;
-//        }
-//        def className = keys[currentModuleZeroBased]
-//        def list = namesByPopularity[className]
-//        
-//        ArcheologyFile javaFile = modules.findFirstClassFile(className)
-//        if (javaFile) {
-//            def javaImports = javaFile.imports.findAll{javaNames.contains(it)}
-//            return new DataPoint3d(name: javaFile.javaName(), x: (list.size() / 5) , y: (javaImports.size() / 5), z: (javaFile.linesCount / 100))
-//
-//            } else {
-//                return getNextDataPoint()
-//            }
-//    }
-    
     
     
     

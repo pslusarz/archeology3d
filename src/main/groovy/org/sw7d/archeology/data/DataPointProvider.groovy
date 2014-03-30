@@ -1,7 +1,7 @@
 package org.sw7d.archeology.data
 
 import org.sw7d.archeology.Modules
-abstract class DataPointProvider {
+class DataPointProvider {
     public Modules modules
     public boolean loadedModules = false
     int maxDataPoints= 0

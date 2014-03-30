@@ -73,7 +73,6 @@ class GroovyMain extends SimpleApplication {
         markOrigin()
         
         rootNode.attachChild(pivot)
-        //jme3tools.optimize.GeometryBatchFactory.optimize(rootNode);
   
         pivot.rotate(-1.5f, 0f, 0f)
 
@@ -155,6 +154,14 @@ class GroovyMain extends SimpleApplication {
                         println "error evaluating script: "+e.getMessage()
                     }
                     println "returned value: "+value
+                    if (value instanceof DataPointProvider) {
+                        DataPointProvider newProvider = value as DataPointProvider
+                        newProvider.loadedModules = false
+                        pivot.detachAllChildren()
+                        provider = newProvider
+                        markOrigin()
+                        newProvider.loadedModules = true
+                    }
                 }
             })
         
@@ -254,7 +261,7 @@ class GroovyMain extends SimpleApplication {
     
     
     long lastUpdateTime = System.currentTimeMillis()
-    
+    boolean lastBox = false
     @Override
     public void simpleUpdate(float tpf) {
         if (!provider.loadedModules) {
@@ -268,8 +275,13 @@ class GroovyMain extends SimpleApplication {
         if (dataPoint) {
             makeBox(dataPoint.name, dataPoint.x, dataPoint.y, dataPoint.z)
             backgroundOperation.text = "Initializing classes (${provider.dataPointCompletionRatio})"
+            lastBox = true
         } else {
-            backgroundOperation.text = ""
+            if (lastBox) {
+                backgroundOperation.text = ""
+                //jme3tools.optimize.GeometryBatchFactory.optimize(pivot)
+                lastBox = false
+            }
         }
         
            
