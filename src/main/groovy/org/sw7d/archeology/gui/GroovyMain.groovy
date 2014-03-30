@@ -33,11 +33,17 @@ import com.jme3.niftygui.NiftyJmeDisplay
 import de.lessvoid.nifty.Nifty
 import org.sw7d.archeology.data.DataPointProvider
 import org.sw7d.archeology.data.DataPoint3d
+import com.jme3.system.AppSettings
 
 class GroovyMain extends SimpleApplication {
     static void main(args){
-        
-        new GroovyMain(pauseOnLostFocus: false, displayStatView: false, displayFps: false).start()
+        AppSettings settings = new AppSettings(true);
+        settings.setResolution(1280,1048);
+        settings.framerate = 30
+        settings.vSync = true
+        settings.samples = 0
+        settings.title = 'Archeology3D'
+        new GroovyMain(pauseOnLostFocus: false, displayStatView: false, displayFps: false, showSettings: false, settings: settings).start()
     }
     
     Node pivot
