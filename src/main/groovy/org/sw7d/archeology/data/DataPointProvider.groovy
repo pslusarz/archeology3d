@@ -1,56 +1,28 @@
 package org.sw7d.archeology.data
 
 import org.sw7d.archeology.Modules
-import org.sw7d.archeology.ArcheologyFile
-
-class DataPointProvider {
-	Modules modules
-        boolean loadedModules = false
-        def javaNames
-        def namesByPopularity
-        int currentModuleZeroBased = -1
-        int maxDataPoints= 0
-        def initModules() {
-            modules = Modules.create()
-            def javaFiles = modules*.files.flatten().findAll{!it.javaName()?.startsWith('java') && it.extension() == 'java'}
-            javaNames = javaFiles*.javaName()
-            namesByPopularity = modules*.files*.imports.flatten().findAll{!it?.startsWith('java') && it}.groupBy {it}.sort {a, b -> -a.value.size() <=>-b.value.size()}
-  
-        }
-     
+abstract class DataPointProvider {
+    public Modules modules
+    public boolean loadedModules = false
+    int maxDataPoints= 0
+    protected int currentModuleZeroBased = -1
+    List<DataPoint3d> dataPoints = []
     List<String> getXYZLabels() {
-        ['Popularity', 'Imports', 'Size']
+        ['X', 'Y', 'Z']
     }
-    
-    DataPoint3d getNextDataPoint() {
-            currentModuleZeroBased++
-            def keys = []
-            keys.addAll(namesByPopularity.keySet())
-            if (exceedsMaxRequestedDataPoints() || currentModuleZeroBased >= keys.size()) {
-                return null;
-            }
-            def className = keys[currentModuleZeroBased]
-            def list = namesByPopularity[className]
+    def initModules() {
         
-            ArcheologyFile javaFile = modules.findFirstClassFile(className)
-            if (javaFile) {
-                def javaImports = javaFile.imports.findAll{javaNames.contains(it)}
-                return new DataPoint3d(name: javaFile.javaName(), x: (list.size() / 5) , y: (javaImports.size() / 5), z: (javaFile.linesCount / 100))
-
-            } else {
-                return getNextDataPoint()
-            }
     }
     
     String getDataPointCompletionRatio() {
-        int denominator = namesByPopularity.size()
+        int denominator = dataPoints.size()
         if (hasRequestedMaxDataPoints()) {
-           denominator = Math.min(maxDataPoints, denominator)
+            denominator = Math.min(maxDataPoints, denominator)
         }
         return "${currentModuleZeroBased} / ${denominator}"
     }
     
-    private boolean exceedsMaxRequestedDataPoints() {
+    protected boolean exceedsMaxRequestedDataPoints() {
         if (!hasRequestedMaxDataPoints()) {
             return false
         } else {
@@ -58,8 +30,16 @@ class DataPointProvider {
         }
     }
     
-    private boolean hasRequestedMaxDataPoints() {
-       return maxDataPoints > 0      
+    protected boolean hasRequestedMaxDataPoints() {
+        return maxDataPoints > 0      
+    }
+    
+    public DataPoint3d getNextDataPoint() {
+        currentModuleZeroBased++
+        if (exceedsMaxRequestedDataPoints() || currentModuleZeroBased >= dataPoints.size()) {
+            return null;
+        }
+        return dataPoints[currentModuleZeroBased]
     }
     
     

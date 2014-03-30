@@ -34,6 +34,7 @@ import de.lessvoid.nifty.Nifty
 import org.sw7d.archeology.data.DataPointProvider
 import org.sw7d.archeology.data.DataPoint3d
 import com.jme3.system.AppSettings
+import org.sw7d.archeology.data.DefaultDataPointProvider
 
 class GroovyMain extends SimpleApplication {
     static void main(args){
@@ -60,7 +61,7 @@ class GroovyMain extends SimpleApplication {
     
     @Override
     void simpleInitApp() {
-        provider = new DataPointProvider(loadedModules: false, maxDataPoints: 100)
+        provider = new DefaultDataPointProvider(maxDataPoints: 500)
         pivot = new Node(pivot)   
         def al = new AmbientLight()
         al.setColor(ColorRGBA.White.mult(0.5f))
@@ -142,11 +143,10 @@ class GroovyMain extends SimpleApplication {
             {boolean keyPressed, float tpf -> if (!keyPressed) {
                     Binding binding = new Binding();
                     binding.setVariable("foo", new Integer(2));
-                    binding.setVariable("modules", provider.modules)
+                    binding.setVariable("modules", Modules.create())
                     GroovyShell shell = new GroovyShell(binding);
                     File scriptFile = new File("scripts/runtime/DefaultScript.groovy")
-                    println scriptFile.absolutePath
-                    println "Exists? "+scriptFile.exists()
+                    println "script file needs to be in: "+scriptFile.canonicalPath+ " (${scriptFile.exists()?'it exists':'it does not exist'})"
                     Object value
                     try {
                       value = shell.evaluate(scriptFile);
