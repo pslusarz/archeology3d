@@ -17,7 +17,11 @@ class DataPointProvider {
             namesByPopularity = modules*.files*.imports.flatten().findAll{!it?.startsWith('java') && it}.groupBy {it}.sort {a, b -> -a.value.size() <=>-b.value.size()}
   
         }
-        
+     
+    List<String> getXYZLabels() {
+        ['Popularity', 'Imports', 'Size']
+    }
+    
     DataPoint3d getNextDataPoint() {
             currentModuleZeroBased++
             def keys = []
@@ -31,7 +35,7 @@ class DataPointProvider {
             ArcheologyFile javaFile = modules.findFirstClassFile(className)
             if (javaFile) {
                 def javaImports = javaFile.imports.findAll{javaNames.contains(it)}
-                return new DataPoint3d(name: javaFile.javaName(), x: list.size(), y: javaImports.size(), z: javaFile.linesCount)
+                return new DataPoint3d(name: javaFile.javaName(), x: (list.size() / 5) , y: (javaImports.size() / 5), z: (javaFile.linesCount / 100))
 
             } else {
                 return getNextDataPoint()

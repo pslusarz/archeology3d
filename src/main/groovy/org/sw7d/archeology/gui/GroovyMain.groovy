@@ -77,9 +77,10 @@ class GroovyMain extends SimpleApplication {
         
         initKeys()
         initCrossHairs() 
-        mat = makeMaterial("Common/MatDefs/SSAO/Textures/random.png")
-        selectedMaterial = makeMaterial("Common/MatDefs/Water/Textures/caustics.jpg")
-        originMaterial = makeMaterial("Common/MatDefs/Water/Textures/foam.jpg")
+        //mat = makeMaterial("Common/MatDefs/SSAO/Textures/random.png")
+        mat = makeMaterial(ColorRGBA.Blue)
+        selectedMaterial = makeMaterial(ColorRGBA.Orange)
+        originMaterial = makeMaterial(ColorRGBA.Brown)
 
         ShowSourceController showSourceController = new ShowSourceController()
         SelectModuleController selectModuleController = new SelectModuleController()
@@ -219,7 +220,7 @@ class GroovyMain extends SimpleApplication {
         help.text = "Esc - quit, click - select, K - selection importers, I - selection imports, L - select modules, V - view source, H/J - zoom, R - run script"
         backgroundOperation = makeHUDText(10, settings.getHeight() - guiFont.charSet.lineHeight - guiFont.charSet.lineHeight *1.5, ColorRGBA.Red)       
         currentSelection = makeHUDText(settings.getWidth() / 2.5, guiFont.charSet.lineHeight, ColorRGBA.Orange)       
-        selectionOrigin = makeHUDText(10, guiFont.charSet.lineHeight, ColorRGBA.Blue)
+        selectionOrigin = makeHUDText(10, guiFont.charSet.lineHeight, ColorRGBA.Brown)
 
     }
     
@@ -233,13 +234,13 @@ class GroovyMain extends SimpleApplication {
         return result
     }
     
-    Material makeMaterial(String path) {
+    Material makeMaterial(ColorRGBA color) {
         Material result = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
-        result.setTexture("DiffuseMap", 
-            assetManager.loadTexture(path));
+        //result.setTexture("DiffuseMap", 
+        //    assetManager.loadTexture(path));
         result.setBoolean('UseMaterialColors', true)
-        result.setColor('Diffuse', ColorRGBA.White)
-        result.setColor('Ambient', ColorRGBA.White)
+        result.setColor('Diffuse', color)
+        result.setColor('Ambient', color)
         result.setColor('Specular', ColorRGBA.White)
         result.setFloat('Shininess', 64f)
         return result
@@ -319,7 +320,7 @@ class GroovyMain extends SimpleApplication {
         txt.setBox(new Rectangle(0, 30, 100, 0));       
         txt.setSize( 15f );
         txt.setColor(ColorRGBA.Black)
-        txt.setText("< Popularity");
+        txt.setText("< ${provider.getXYZLabels()[0]}");
         txt.rotate(0f, 0f, (float)FastMath.DEG_TO_RAD * (180));
         txt.setLocalTranslation(75f,-75f,0f)
         pivot.attachChild(txt);
@@ -328,7 +329,7 @@ class GroovyMain extends SimpleApplication {
         txt2.setBox(new Rectangle(0, 30, 100, 0));       
         txt2.setSize( 15f );
         txt2.setColor(ColorRGBA.Black)
-        txt2.setText("Imports >");
+        txt2.setText("${provider.getXYZLabels()[1]} >");
         txt2.rotate(0f, 0f, (float)FastMath.DEG_TO_RAD * (90));
         txt2.setLocalTranslation(-25f, 30f, 0f)
         pivot.attachChild(txt2);
@@ -337,7 +338,7 @@ class GroovyMain extends SimpleApplication {
         txt3.setBox(new Rectangle(0, 0, 100, 30));       
         txt3.setSize( 15f );
         txt3.setColor(ColorRGBA.Black)
-        txt3.setText("Size >");
+        txt3.setText("${provider.getXYZLabels()[2]} >");
         txt3.rotate((float)FastMath.DEG_TO_RAD * 45, (float)FastMath.DEG_TO_RAD * (90), (float)FastMath.DEG_TO_RAD * (180));
         txt3.setLocalTranslation(-100f,-120f,30f)
         pivot.attachChild(txt3);
@@ -345,9 +346,11 @@ class GroovyMain extends SimpleApplication {
         
     }
     
-    void makeBox(String projectName, int popularity, int imports, int size) {
+    void makeBox(String projectName, int x, int y, int z) {
         //size 2 box, useful for drilling down in heavily populated zones
-        Box b = new Box(new Vector3f(popularity / 5,imports / 5, size / 100-3), new Vector3f(popularity / 5 + 1,imports / 5+1, size/100));
+        int boxHeight = 3
+        int boxSideLength = 1
+        Box b = new Box(new Vector3f(x,y, z - boxHeight), new Vector3f(x + boxSideLength,y + boxSideLength, z));
         //Box b = new Box(new Vector3f(popularity / 10,imports / 10, 0), new Vector3f(popularity / 10 + 1,imports / 10+1, size/100));
         Geometry geom = new Geometry(projectName, b);
         spatialsByName[projectName] = geom
