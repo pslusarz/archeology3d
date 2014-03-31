@@ -4,6 +4,8 @@ import java.util.List
 
 class Modules extends ArrayList<Module> {
     static String serializedFile = "apache-modules.pickle"
+    
+    public static Modules loadedModules
 
     public Modules initFromFilesystem() {
         String root = '../apache-data/'
@@ -80,9 +82,12 @@ class Modules extends ArrayList<Module> {
     }
 
     public static Modules create() {
-        if (!new File(serializedFile).exists()) {
-            new Modules().initFromFilesystem().serialize()
-        }
-        return initFromPickle()
+        if (!loadedModules) {         
+            if (!new File(serializedFile).exists()) {
+                new Modules().initFromFilesystem().serialize()
+            }
+            loadedModules = initFromPickle()
+        }    
+        return loadedModules
     }
 }

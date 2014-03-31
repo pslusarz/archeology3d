@@ -44,6 +44,7 @@ class GroovyMain extends SimpleApplication {
         settings.vSync = true
         settings.samples = 0
         settings.title = 'Archeology3D'
+        //settings.renderer = AppSettings.LWJGL_OPENGL2
         new GroovyMain(pauseOnLostFocus: false, displayStatView: true, displayFps: true, showSettings: false, settings: settings).start()
     }
     
