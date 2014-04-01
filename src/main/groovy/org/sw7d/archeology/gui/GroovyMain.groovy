@@ -35,6 +35,8 @@ import org.sw7d.archeology.data.DataPointProvider
 import org.sw7d.archeology.data.DataPoint3d
 import com.jme3.system.AppSettings
 import org.sw7d.archeology.data.DefaultDataPointProvider
+import com.jme3.scene.BatchNode
+import com.jme3.collision.CollisionResult
 
 class GroovyMain extends SimpleApplication {
     static void main(args){
@@ -58,9 +60,12 @@ class GroovyMain extends SimpleApplication {
     BitmapText selectionOrigin
     BitmapText help
     DataPointProvider provider
+    BatchNode batchNode
     
     @Override
     void simpleInitApp() {
+        batchNode = new BatchNode()
+        rootNode.attachChild(batchNode)
         provider = new DefaultDataPointProvider(maxDataPoints: 5000)
         def al = new AmbientLight()
         al.setColor(ColorRGBA.White.mult(0.5f))
@@ -118,7 +123,11 @@ class GroovyMain extends SimpleApplication {
             {boolean keyPressed, float tpf -> if (!keyPressed) {
                     CollisionResults results = new CollisionResults()
                     Ray ray = new Ray(cam.location, cam.direction)
-                    rootNode.collideWith(ray, results)
+                    batchNode.collideWith(ray, results)
+                    println results
+                    results.each { CollisionResult cr ->
+                        println cr.getGeometry().name +" distance "+cr.getDistance() 
+                    }
                     select(results.closestCollision?.geometry)
                     println results.closestCollision?.geometry?.name
                 }
@@ -154,7 +163,7 @@ class GroovyMain extends SimpleApplication {
                     if (value instanceof DataPointProvider) {
                         DataPointProvider newProvider = value as DataPointProvider
                         newProvider.loadedModules = false
-                        rootNode.detachAllChildren()
+                        batchNode.detachAllChildren()
                         spatialsByName.clear()
                         provider = newProvider
                         markOrigin()
@@ -175,7 +184,7 @@ class GroovyMain extends SimpleApplication {
         selectionOrigin.text = ""
         spatialsByName.each { String name, Geometry currentSpatial ->
             if (!selectedFilesByName[currentSpatial.name] || !criteria.call(currentSpatial)) {
-                rootNode.detachChild(currentSpatial) 
+                batchNode.detachChild(currentSpatial) 
             } else {
                 reset(currentSpatial)
             }
@@ -189,16 +198,16 @@ class GroovyMain extends SimpleApplication {
     }
     
     void reset(Geometry geometry) {
-        rootNode.attachChild(geometry)
+        batchNode.attachChild(geometry)
         geometry.setMaterial(mat)
     }
     
     void select(Geometry selection) {
         if (selection) {
-            selection.setMaterial(selectedMaterial)
+            //selection.setMaterial(selectedMaterial)
         }
         if (selected && selected.material != originMaterial && selected != selection) {
-            selected.setMaterial(mat)
+            //selected.setMaterial(mat)
         }
         selected = selection
         currentSelection.text = "Selected: ${selected?.name?:'none'}"
@@ -274,11 +283,17 @@ class GroovyMain extends SimpleApplication {
             makeBox(dataPoint.name, dataPoint.x, dataPoint.y, dataPoint.z)
             backgroundOperation.text = "Initializing classes (${provider.dataPointCompletionRatio})"
             lastBox = true
+            rootNode.detachChild(batchNode)
         } else {
             if (lastBox) {
                 backgroundOperation.text = ""
-                //jme3tools.optimize.GeometryBatchFactory.optimize(rootNode)
+                //jme3tools.optimize.GeometryBatchFactory.optimize(batchNode)
+                println "now preparing to display all nodes "+new Date()
+
+                batchNode.batch()
+                rootNode.attachChild(batchNode)
                 lastBox = false
+                println "now done preparing to display all nodes "+new Date()
             }
         }
         
@@ -310,6 +325,7 @@ class GroovyMain extends SimpleApplication {
         
     }
     
+    //List<Geometry> boxesToBeBatched = []
     void makeUnitBox(def x, y, z, color) {
         Vector3f sunVector = new Vector3f(x,y,z)
         Box b = new Box(sunVector, 0.5f, 0.5f, 0.5f);
@@ -317,7 +333,7 @@ class GroovyMain extends SimpleApplication {
         Material mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");      
         mat.setColor("Color", color);
         geom.setMaterial(mat);
-        rootNode.attachChild(geom) 
+        batchNode.attachChild(geom) 
     }
     
     void markOrigin() {
@@ -339,7 +355,7 @@ class GroovyMain extends SimpleApplication {
         txt.setText("< ${provider.getXYZLabels()[0]}");
         txt.rotate(0f, 0f, (float)FastMath.DEG_TO_RAD * (180));
         txt.setLocalTranslation(75f,-75f,0f)
-        rootNode.attachChild(txt);
+        batchNode.attachChild(txt);
         
         BitmapText txt2 = new BitmapText(fnt, false);
         txt2.setBox(new Rectangle(0, 30, 100, 0));       
@@ -348,7 +364,7 @@ class GroovyMain extends SimpleApplication {
         txt2.setText("${provider.getXYZLabels()[1]} >");
         txt2.rotate(0f, 0f, (float)FastMath.DEG_TO_RAD * (90));
         txt2.setLocalTranslation(-25f, 30f, 0f)
-        rootNode.attachChild(txt2);
+        batchNode.attachChild(txt2);
         
         BitmapText txt3 = new BitmapText(fnt, false);
         txt3.setBox(new Rectangle(0, 0, 100, 30));       
@@ -357,7 +373,7 @@ class GroovyMain extends SimpleApplication {
         txt3.setText("${provider.getXYZLabels()[2]} >");
         txt3.rotate((float)FastMath.DEG_TO_RAD * 45, (float)FastMath.DEG_TO_RAD * (90), (float)FastMath.DEG_TO_RAD * (180));
         txt3.setLocalTranslation(-100f,-120f,30f)
-        rootNode.attachChild(txt3);
+        batchNode.attachChild(txt3);
         
         
     }
@@ -372,7 +388,7 @@ class GroovyMain extends SimpleApplication {
         spatialsByName[projectName] = geom
         TangentBinormalGenerator.generate(b);
         geom.setMaterial(mat);
-        rootNode.attachChild(geom);     
+        batchNode.attachChild(geom);     
     }
     
     boolean displayingSelectModulesDialog = false
