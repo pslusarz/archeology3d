@@ -2,6 +2,7 @@ package org.sw7d.archeology.data
 
 class DataPoint3d {
     String name
-    int x, y, z	
+    int x, y, z
+    Object delegate
 }
 

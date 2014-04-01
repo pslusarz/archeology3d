@@ -6,15 +6,8 @@ println "here be start"
 
 List<DataPoint3d> dp = []
 modules.find {it.name.startsWith('hadoop')}.files.findAll {it.javaName()}.each { ArcheologyFile javaFile ->
-    dp << new DataPoint3d(name: javaFile.javaName(), z: javaFile.imports.size() * 2, x: (javaFile.linesCount / 10), y: javaFile.commits.size()*2) 
+    dp << new DataPoint3d(name: javaFile.javaName(), delegate: javaFile, z: javaFile.imports.size() * 2, x: (javaFile.linesCount / 10), y: javaFile.commits.size()*2) 
 }
 
-def dpp = new DataPointProvider() {
-    List<String> getXYZLabels() {
-        ['Lines of Code', 'Commits','Imports']
-    }
-}
+return new DataPointProvider(xLabel: "Lines of Code /10", yLabel: "Commits *2", zLabel: "Imports *2", dataPoints: dp)
 
-dpp.dataPoints = dp
-
-return dpp

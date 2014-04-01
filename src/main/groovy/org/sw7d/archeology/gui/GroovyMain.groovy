@@ -40,20 +40,18 @@ import com.jme3.collision.CollisionResult
 
 class GroovyMain extends SimpleApplication {
     static void main(args){
-        AppSettings settings = new AppSettings(true);
-        settings.setResolution(1280,1048);
-        settings.framerate = 30
+        AppSettings settings = new AppSettings(true)
+        settings.setResolution(1280,1048)
         settings.vSync = true
         settings.samples = 0
         settings.title = 'Archeology3D'
-        //settings.renderer = AppSettings.LWJGL_OPENGL2
-        new GroovyMain(pauseOnLostFocus: false, displayStatView: true, displayFps: true, showSettings: false, settings: settings).start()
+        new GroovyMain(pauseOnLostFocus: false, displayStatView: false, displayFps: false, showSettings: false, settings: settings).start()
     }
     
-    Material mat, selectedMaterial, originMaterial
-    List<String> selectedModules
+    Material mat 
     Map<String, ArcheologyFile> selectedFilesByName = [:]
     Map<String, Geometry> spatialsByName = [:]
+    Map<Geometry, DataPoint3d> dataPointsByGeometry = [:]
     Geometry selected
     BitmapText backgroundOperation
     BitmapText currentSelection
@@ -85,14 +83,9 @@ class GroovyMain extends SimpleApplication {
         
         initKeys()
         initCrossHairs() 
-        //mat = makeMaterial("Common/MatDefs/SSAO/Textures/random.png")
         mat = makeMaterial(ColorRGBA.Blue)
-        selectedMaterial = makeMaterial(ColorRGBA.Orange)
-        originMaterial = makeMaterial(ColorRGBA.Brown)
 
         ShowSourceController showSourceController = new ShowSourceController()
-        SelectModuleController selectModuleController = new SelectModuleController()
-        stateManager.attach(selectModuleController)
         stateManager.attach(showSourceController)
         
         NiftyJmeDisplay niftyDisplay = new NiftyJmeDisplay(assetManager,
@@ -102,7 +95,7 @@ class GroovyMain extends SimpleApplication {
         nifty = niftyDisplay.getNifty();
         guiViewPort.addProcessor(niftyDisplay);
         nifty.validateXml("Interface/selectModule.xml")
-        nifty.fromXml("Interface/selectModule.xml", "nothing", selectModuleController, showSourceController)
+        nifty.fromXml("Interface/selectModule.xml", "nothing", showSourceController)
         
         
         
@@ -117,7 +110,6 @@ class GroovyMain extends SimpleApplication {
     def initKeys() {
         handleAction("ZoomOut", new KeyTrigger(KeyInput.KEY_H), {boolean keyPressed, float tpf -> if (!keyPressed) {flyCam.moveCamera(-10, false)}})
         handleAction("ZoomIn", new KeyTrigger(KeyInput.KEY_J), {boolean keyPressed, float tpf -> if (!keyPressed) {flyCam.moveCamera(10, false)}})
-        handleAction("SelectModules", new KeyTrigger(KeyInput.KEY_L), {boolean keyPressed, float tpf -> if (!keyPressed && provider.loadedModules) {displaySelectModulesDialog()}})
         handleAction("ViewSource", new KeyTrigger(KeyInput.KEY_V), {boolean keyPressed, float tpf -> if (!keyPressed) {displayViewSource()}})
         handleAction("Select", new MouseButtonTrigger(MouseInput.BUTTON_LEFT), 
             {boolean keyPressed, float tpf -> if (!keyPressed) {
@@ -132,17 +124,6 @@ class GroovyMain extends SimpleApplication {
                     println results.closestCollision?.geometry?.name
                 }
             })
-        handleAction("Users", new KeyTrigger(KeyInput.KEY_K), 
-            {boolean keyPressed, float tpf -> if (!keyPressed) {
-                    displayAllMeetingCriteria {Geometry toBeDisplayed -> !selected || toBeDisplayed == selected || onlySelectedModules().findFirstClassFile(toBeDisplayed.name).imports?.contains(selected.name)}  
-                }
-            })
-         
-        handleAction("Imports", new KeyTrigger(KeyInput.KEY_I), 
-            {boolean keyPressed, float tpf -> if (!keyPressed) {
-                    displayAllMeetingCriteria {Geometry toBeDisplayed ->  !selected || toBeDisplayed == selected || selectedFilesByName[selected.name].imports.contains(toBeDisplayed.name)}
-                }
-            })
         
         handleAction("RunScript", new KeyTrigger(KeyInput.KEY_R), 
             {boolean keyPressed, float tpf -> if (!keyPressed) {
@@ -154,7 +135,7 @@ class GroovyMain extends SimpleApplication {
                     println "script file needs to be in: "+scriptFile.canonicalPath+ " (${scriptFile.exists()?'it exists':'it does not exist'})"
                     Object value
                     try {
-                      value = shell.evaluate(scriptFile);
+                        value = shell.evaluate(scriptFile);
                     } catch (Exception e) {
                         e.printStackTrace()
                         println "error evaluating script: "+e.getMessage()
@@ -165,6 +146,7 @@ class GroovyMain extends SimpleApplication {
                         newProvider.loadedModules = false
                         batchNode.detachAllChildren()
                         spatialsByName.clear()
+                        dataPointsByGeometry.clear()
                         provider = newProvider
                         markOrigin()
                         newProvider.loadedModules = true
@@ -174,43 +156,20 @@ class GroovyMain extends SimpleApplication {
         
     }
     
-    Modules onlySelectedModules() {
-        Modules result = new Modules()
-        result.addAll( provider.modules.findAll {selectedModules.contains(it.name)})
-        return result
-    }
-    
-    void displayAllMeetingCriteria(Closure criteria) {
-        selectionOrigin.text = ""
-        spatialsByName.each { String name, Geometry currentSpatial ->
-            if (!selectedFilesByName[currentSpatial.name] || !criteria.call(currentSpatial)) {
-                batchNode.detachChild(currentSpatial) 
-            } else {
-                reset(currentSpatial)
-            }
-            
-            if (selected == currentSpatial) {
-                selected.setMaterial(originMaterial)
-                selectionOrigin.text = "Origin: "+selected.name
-
-            }                         
-        }   
-    }
-    
     void reset(Geometry geometry) {
         batchNode.attachChild(geometry)
         geometry.setMaterial(mat)
     }
     
     void select(Geometry selection) {
-        if (selection) {
-            //selection.setMaterial(selectedMaterial)
-        }
-        if (selected && selected.material != originMaterial && selected != selection) {
-            //selected.setMaterial(mat)
-        }
         selected = selection
         currentSelection.text = "Selected: ${selected?.name?:'none'}"
+        DataPoint3d dp = dataPointsByGeometry[selection]
+        if (dp) {
+            selectionOrigin.text = "${provider.xLabel}: ${dp.x}\n${provider.yLabel}: ${dp.y}\n${provider.zLabel}: ${dp.z}"
+        } else {
+            selectionOrigin.text = ""
+        }
     }
     
     void handleAction (String aname, Trigger trigger, Closure handler) {
@@ -240,7 +199,7 @@ class GroovyMain extends SimpleApplication {
         help.text = "Esc - quit, click - select, K - selection importers, I - selection imports, L - select modules, V - view source, H/J - zoom, R - run script"
         backgroundOperation = makeHUDText(10, settings.getHeight() - guiFont.charSet.lineHeight - guiFont.charSet.lineHeight *1.5, ColorRGBA.Red)       
         currentSelection = makeHUDText(settings.getWidth() / 2.5, guiFont.charSet.lineHeight, ColorRGBA.Orange)       
-        selectionOrigin = makeHUDText(10, guiFont.charSet.lineHeight, ColorRGBA.Brown)
+        selectionOrigin = makeHUDText(10, guiFont.charSet.lineHeight * 4, ColorRGBA.Brown)
 
     }
     
@@ -256,8 +215,6 @@ class GroovyMain extends SimpleApplication {
     
     Material makeMaterial(ColorRGBA color) {
         Material result = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
-        //result.setTexture("DiffuseMap", 
-        //    assetManager.loadTexture(path));
         result.setBoolean('UseMaterialColors', true)
         result.setColor('Diffuse', color)
         result.setColor('Ambient', color)
@@ -280,7 +237,7 @@ class GroovyMain extends SimpleApplication {
         }
         DataPoint3d dataPoint = provider.getNextDataPoint()
         if (dataPoint) {
-            makeBox(dataPoint.name, dataPoint.x, dataPoint.y, dataPoint.z)
+            makeBox(dataPoint)
             backgroundOperation.text = "Initializing classes (${provider.dataPointCompletionRatio})"
             lastBox = true
             rootNode.detachChild(batchNode)
@@ -305,7 +262,7 @@ class GroovyMain extends SimpleApplication {
         new Thread() {
             void run() {               
                 provider.initModules()
-                selectModules (provider.modules.collect {it.name})      
+                //selectModules (provider.modules.collect {it.name})      
                 backgroundOperation.setText("")
                 provider.loadedModules = true
             }
@@ -378,20 +335,22 @@ class GroovyMain extends SimpleApplication {
         
     }
     
-    void makeBox(String projectName, int x, int y, int z) {
+    void makeBox(DataPoint3d dataPoint) {
         //size 2 box, useful for drilling down in heavily populated zones
         int boxHeight = 3
         int boxSideLength = 1
-        Box b = new Box(new Vector3f(x,y, z - boxHeight), new Vector3f(x + boxSideLength,y + boxSideLength, z));
+        Box b = new Box(new Vector3f(dataPoint.x,dataPoint.y, dataPoint.z - boxHeight), new Vector3f(dataPoint.x + boxSideLength,dataPoint.y + boxSideLength, dataPoint.z));
         //Box b = new Box(new Vector3f(popularity / 10,imports / 10, 0), new Vector3f(popularity / 10 + 1,imports / 10+1, size/100));
-        Geometry geom = new Geometry(projectName, b);
-        spatialsByName[projectName] = geom
+        Geometry geom = new Geometry(dataPoint.name, b);
+        //geom.setUserData("dataPoint", dataPoint)
+        spatialsByName[dataPoint.name] = geom
+        dataPointsByGeometry[geom] = dataPoint
         TangentBinormalGenerator.generate(b);
         geom.setMaterial(mat);
         batchNode.attachChild(geom);     
     }
     
-    boolean displayingSelectModulesDialog = false
+    //boolean displayingSelectModulesDialog = false
     boolean displayingViewSource = false
     Nifty nifty
     
@@ -410,40 +369,40 @@ class GroovyMain extends SimpleApplication {
         
     }
      
-    void displaySelectModulesDialog() {
-        if (displayingSelectModulesDialog) { return}
-        displayingSelectModulesDialog = true
-        //nifty.fromXml("Interface/selectModule.xml", "start", new SelectModuleController(app: this));
-        nifty.gotoScreen("start")
-        flyCam.setEnabled(false);
-        inputManager.setCursorVisible(true);
-    }
+    //    void displaySelectModulesDialog() {
+    //        if (displayingSelectModulesDialog) { return}
+    //        displayingSelectModulesDialog = true
+    //        //nifty.fromXml("Interface/selectModule.xml", "start", new SelectModuleController(app: this));
+    //        nifty.gotoScreen("start")
+    //        flyCam.setEnabled(false);
+    //        inputManager.setCursorVisible(true);
+    //    }
     
-    void doneSelectingModules(List<String> selectedModules2)  { 
-        println "Selected modules: "+selectedModules2
-        nifty.gotoScreen("nothing")
-        flyCam.setEnabled(true);
-        inputManager.setCursorVisible(false);
-        selectModules(selectedModules2)
-        
-        displayAllMeetingCriteria {Geometry toBeDisplayed -> true}
-        displayingSelectModulesDialog = false
-    }
+    //    void doneSelectingModules(List<String> selectedModules2)  { 
+    //        println "Selected modules: "+selectedModules2
+    //        nifty.gotoScreen("nothing")
+    //        flyCam.setEnabled(true);
+    //        inputManager.setCursorVisible(false);
+    //        selectModules(selectedModules2)
+    //        
+    //        displayAllMeetingCriteria {Geometry toBeDisplayed -> true}
+    //        displayingSelectModulesDialog = false
+    //    }
     
-    def selectModules(List<String> selectedModules2) {
-        List<ArcheologyFile> selectedModuleFiles = provider.modules.findAll {selectedModules2.contains(it.name)}*.files.flatten()
-        selectedFilesByName.clear()
-        selectedModuleFiles.each {
-            selectedFilesByName[it.javaName()] = it
-        }
-        this.selectedModules = selectedModules2
-        if (selected && !selectedFilesByName[selected.name]) {
-            select(null)
-        }
-    }
+    //    def selectModules(List<String> selectedModules2) {
+    //        List<ArcheologyFile> selectedModuleFiles = provider.modules.findAll {selectedModules2.contains(it.name)}*.files.flatten()
+    //        selectedFilesByName.clear()
+    //        selectedModuleFiles.each {
+    //            selectedFilesByName[it.javaName()] = it
+    //        }
+    //        this.selectedModules = selectedModules2
+    //        if (selected && !selectedFilesByName[selected.name]) {
+    //            select(null)
+    //        }
+    //    }
     
     Modules getAvailableModules() {
-        provider.modules
+        Modules.create()
     }
 	
 }

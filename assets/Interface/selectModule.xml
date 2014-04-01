@@ -3,7 +3,7 @@
     <useStyles filename="nifty-default-styles.xml" />
     <useControls filename="nifty-default-controls.xml" />
 
-    <screen id="start" controller="org.sw7d.archeology.gui.SelectModuleController">
+    <!--screen id="start" controller="org.sw7d.archeology.gui.SelectModuleController">
         <layer childLayout="center">
             <panel id="panel" height="90%" width="30%" align="right" valign="top" childLayout="center" visibleToMouse="true">
                 <control name="label" text="Select modules to display" align="left" valign="top" color="#f00f"/>
@@ -15,7 +15,7 @@
                 <control id="selectNoneButton" name="button" label="None" align = "center" valign="bottom" />
             </panel>
         </layer>
-    </screen> 
+    </screen--> 
     <screen id="source" controller="org.sw7d.archeology.gui.ShowSourceController">
         <layer childLayout="center">
             <panel id="panel" height="90%" width="30%" align="left" valign="top" childLayout="center" visibleToMouse="true">

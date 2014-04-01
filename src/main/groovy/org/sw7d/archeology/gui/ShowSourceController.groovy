@@ -25,7 +25,7 @@ class ShowSourceController extends AbstractAppState implements ScreenController 
 
     public void onStartScreen() {
         System.out.println("onStartScreen: show source");
-        ArcheologyFile af = app.selectedFilesByName[app.selected.name]
+        ArcheologyFile af = app.dataPointsByGeometry[app.selected].delegate
         println "file: " + af.getAbsolutePath()
         println "exists? " + af.exists()
         println " path " + af.path
@@ -36,11 +36,9 @@ class ShowSourceController extends AbstractAppState implements ScreenController 
         if (actualFile.exists()) {
             String text = actualFile.text //new File("src/org/sw7d/archeology/gui/GroovyMain.groovy").text
             tf.text = text
-            println "setting source label size to: ${tf.element.getRenderer(TextRenderer.class).getFont().height * text.split("\n").size()}"
             tf.setHeight(SizeValue.px(tf.element.getRenderer(TextRenderer.class).getFont().height * text.split("\n").size()))//"${text.split("\n").size() * 25}px"
             sp.getElement().layoutElements();
             sp.setUp(0, 5, 0, 50, ScrollPanel.AutoScroll.OFF);
-            println "... and the height is... ${tf.height}"
         }
     }
 

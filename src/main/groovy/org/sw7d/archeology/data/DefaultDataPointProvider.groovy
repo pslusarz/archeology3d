@@ -6,7 +6,12 @@ import org.sw7d.archeology.ArcheologyFile
 class DefaultDataPointProvider extends DataPointProvider {
     def javaNames
     def namesByPopularity
-        
+    
+    DefaultDataPointProvider() {
+        xLabel = "Popularity"
+        yLabel = "Imports"
+        zLabel = "Lines of Code"
+    }
     
     def initModules() {
         modules = Modules.create()
@@ -21,7 +26,7 @@ class DefaultDataPointProvider extends DataPointProvider {
                 ArcheologyFile javaFile = modules.findFirstClassFile(className)
                 if (javaFile) {
                     def javaImports = javaFile.imports.findAll{javaNames.contains(it)}
-                    dataPoints << new DataPoint3d(name: javaFile.javaName(), x: (popularity.size() / 5) , y: (javaImports.size() / 5), z: (javaFile.linesCount / 100))
+                    dataPoints << new DataPoint3d(name: javaFile.javaName(), x: (popularity.size() / 5) , y: (javaImports.size() / 5), z: (javaFile.linesCount / 100), delegate: javaFile)
                 }
             }
         }
@@ -29,9 +34,7 @@ class DefaultDataPointProvider extends DataPointProvider {
         
     }
      
-    List<String> getXYZLabels() {
-        ['Popularity', 'Imports', 'Size']
-    }
+    
     
     
     

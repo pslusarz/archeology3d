@@ -7,8 +7,9 @@ class DataPointProvider {
     int maxDataPoints= 0
     protected int currentModuleZeroBased = -1
     List<DataPoint3d> dataPoints = []
+    String xLabel = 'X', yLabel = 'Y', zLabel = 'Z'
     List<String> getXYZLabels() {
-        ['X', 'Y', 'Z']
+        [xLabel, yLabel, zLabel]
     }
     def initModules() {
         
