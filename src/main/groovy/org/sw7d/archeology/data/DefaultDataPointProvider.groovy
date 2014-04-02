@@ -34,7 +34,7 @@ class DefaultDataPointProvider extends DataPointProvider {
 //        }
         //println "Computing data points took: ${(System.currentTimeMillis() - start ) / 1000} seconds"
         modules*.files.flatten().findAll{it.popularity > 0}.sort{-it.popularity}.each {
-            dataPoints << new DataPoint3d(name: it.javaName(), x: (it.popularity / 5) , y: (it.javaImports.size() / 5), z: (it.linesCount / 100), delegate: it)
+            dataPoints << new DataPoint3d(name: it.javaName(), x: (it.popularity) , y: (it.javaImports.size()), z: (it.linesCount), delegate: it)
         }
         
     }

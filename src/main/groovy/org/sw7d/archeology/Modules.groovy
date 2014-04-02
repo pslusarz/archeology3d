@@ -3,12 +3,12 @@ package org.sw7d.archeology
 import java.util.List
 
 class Modules extends ArrayList<Module> {
-    static String serializedFile = "apache-modules.pickle"
+    static String serializedFile = "carfax-modules.pickle"
     
     public static Modules loadedModules
 
     public Modules initFromFilesystem() {
-        String root = '../apache-data/'
+        String root = 'D:/archeology/'
         println "reading from file system"
         new File(root).eachDir { File repository ->
             repository.eachDir{ File moduleDir ->
@@ -28,19 +28,17 @@ class Modules extends ArrayList<Module> {
     
     private initPopularity() {
         def javaFiles = files.flatten().findAll{!it.javaName()?.startsWith('java') && (it.extension() == 'java' || it.extension() == 'groovy')}
-        javaNames = javaFiles*.javaName()
-        namesByPopularity = files*.imports.flatten().findAll{!it?.startsWith('java') && it}.groupBy {it}.sort {a, b -> -a.value.size() <=>-b.value.size()}
+        def javaNames = javaFiles*.javaName()
+        def namesByPopularity = files*.imports.flatten().findAll{!it?.startsWith('java') && it}.groupBy {it}.sort {a, b -> -a.value.size() <=>-b.value.size()}
         
         println "Now computing popularity"
-        namesByPopularity.each { String className, List<String> popularity ->
-            if (!hasRequestedMaxDataPoints() || dataPoints.size() < maxDataPoints) {
-                ArcheologyFile javaFile = modules.findFirstClassFile(className)
+        namesByPopularity.each { String className, List<String> popularity -> 
+                ArcheologyFile javaFile = this.findFirstClassFile(className)
                 if (javaFile) {
                     def javaImports = javaFile.imports.findAll{javaNames.contains(it)}
                     javaFile.popularity = popularity.size()
                     javaFile.javaImports = javaImports
                 }
-            }
         }
     }
 

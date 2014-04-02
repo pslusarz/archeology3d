@@ -26,12 +26,12 @@ class ShowSourceController extends AbstractAppState implements ScreenController 
     public void onStartScreen() {
         System.out.println("onStartScreen: show source");
         ArcheologyFile af = app.dataPointsByGeometry[app.selected].delegate
-        println "file: " + af.getAbsolutePath()
+        println "file: " + af.getCanonicalPath()
         println "exists? " + af.exists()
         println " path " + af.path
-        String actualFileLocation = ".." + af.path.split(/\.\./)[1]
-        println "presumably this exists: " + actualFileLocation
-        File actualFile = new File(actualFileLocation)
+        //String actualFileLocation = ".." + af.path.split(/\.\./)[1]
+        //println "presumably this exists: " + actualFileLocation
+        File actualFile = new File(af.getCanonicalPath())
         println actualFile.absolutePath + " exists? " + actualFile.exists()
         if (actualFile.exists()) {
             String text = actualFile.text //new File("src/org/sw7d/archeology/gui/GroovyMain.groovy").text

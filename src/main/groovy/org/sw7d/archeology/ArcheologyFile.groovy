@@ -24,12 +24,22 @@ class ArcheologyFile extends File {
             javaPackage = initJavaPackage(lines)
 	  
             if (module.isRepoGit()) {
-                String command = """git --no-pager --git-dir=${new File(module.path).canonicalPath}/.git --work-tree=${new File(module.path).canonicalPath} log --pretty=format:%ad --date=short -- ${canonicalPath}"""
+                String command
+                if (System.properties['os.name'].toLowerCase().contains('windows')) {
+                    String gitDir = (new File(module.path).canonicalPath+"\\.git").replaceAll('\\\\','\\\\')
+                    String workTree = new File(module.path).canonicalPath.replaceAll('\\\\','\\\\')
+                    String fileNameInWeirdWindowsGitFormat = canonicalPath.replaceAll('\\\\', '/')
+                  command = """git --no-pager --git-dir=${gitDir} --work-tree=${workTree} log --pretty=format:%ad --date=short -- ${fileNameInWeirdWindowsGitFormat}"""  
+                       
+                } else {
+                  command = """git --no-pager --git-dir=${new File(module.path).canonicalPath}/.git --work-tree=${new File(module.path).canonicalPath} log --pretty=format:%ad --date=short -- ${canonicalPath}"""
+                }
                 def sout = new StringBuffer()
                 def serr = new StringBuffer()
                 Process p = command.execute()
                 p.waitForProcessOutput(sout, serr)
                 //p.waitFor()
+                //println "command: "+command
                 //println "output:"+sout.toString()
                 //println "error:"+serr.toString()
                 String[] commitDates = sout.toString().split('\n')
