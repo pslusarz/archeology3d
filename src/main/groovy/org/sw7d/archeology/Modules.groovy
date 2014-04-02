@@ -20,9 +20,28 @@ class Modules extends ArrayList<Module> {
             }
         }
         this.each { it.initLibrary(this) }
+        initPopularity()
         //initLevels()
         this
 
+    }
+    
+    private initPopularity() {
+        def javaFiles = files.flatten().findAll{!it.javaName()?.startsWith('java') && (it.extension() == 'java' || it.extension() == 'groovy')}
+        javaNames = javaFiles*.javaName()
+        namesByPopularity = files*.imports.flatten().findAll{!it?.startsWith('java') && it}.groupBy {it}.sort {a, b -> -a.value.size() <=>-b.value.size()}
+        
+        println "Now computing popularity"
+        namesByPopularity.each { String className, List<String> popularity ->
+            if (!hasRequestedMaxDataPoints() || dataPoints.size() < maxDataPoints) {
+                ArcheologyFile javaFile = modules.findFirstClassFile(className)
+                if (javaFile) {
+                    def javaImports = javaFile.imports.findAll{javaNames.contains(it)}
+                    javaFile.popularity = popularity.size()
+                    javaFile.javaImports = javaImports
+                }
+            }
+        }
     }
 
     List<ArcheologyFile> findClassFile(String className) {

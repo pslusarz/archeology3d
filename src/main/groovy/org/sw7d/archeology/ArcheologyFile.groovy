@@ -7,6 +7,8 @@ import java.util.regex.Matcher
 class ArcheologyFile extends File {
     public static final textFileExtensions = ['java', 'groovy','html', 'txt', 'xml', 'sql']
     int linesCount = -1
+    int popularity = 0
+    Set<String> javaImports
     Set<String>	imports
     String javaPackage = ''
     List<Date> commits = []
@@ -22,10 +24,15 @@ class ArcheologyFile extends File {
             javaPackage = initJavaPackage(lines)
 	  
             if (module.isRepoGit()) {
-                String command = "git --no-pager --git-dir=${module.path}/.git --work-tree=${module.path} log --pretty=format:%ad --date=short '${canonicalPath}'"
+                String command = """git --no-pager --git-dir=${new File(module.path).canonicalPath}/.git --work-tree=${new File(module.path).canonicalPath} log --pretty=format:%ad --date=short -- ${canonicalPath}"""
+                def sout = new StringBuffer()
+                def serr = new StringBuffer()
                 Process p = command.execute()
-                p.waitFor()
-                String[] commitDates = p.in.text.split('\n')
+                p.waitForProcessOutput(sout, serr)
+                //p.waitFor()
+                //println "output:"+sout.toString()
+                //println "error:"+serr.toString()
+                String[] commitDates = sout.toString().split('\n')
                 //println "command: ${command}"
                 //println "output ${commitDates}"
                 try {
@@ -33,8 +40,11 @@ class ArcheologyFile extends File {
                         commits << DateFlyweight.dates[rawDate]
                     }} catch (Exception e) {
                     println "=========== something got goofed up ==============="
-                    println "${command}"
-                    println "${commitDates}"
+                    println "exception: "+e.message
+                    println "command: ${command}"
+                    println "output: ${sout.toString()}"
+                    println "error: ${serr.toString()}"
+                    
                 }
             }
         }	  
