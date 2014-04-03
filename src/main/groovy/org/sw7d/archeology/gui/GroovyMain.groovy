@@ -62,6 +62,7 @@ class GroovyMain extends SimpleApplication {
     
     @Override
     void simpleInitApp() {
+        switchFirstPersonNavigation(false)
         batchNode = new BatchNode()
         rootNode.attachChild(batchNode)
         provider = new DefaultDataPointProvider(maxDataPoints: 5000)
@@ -108,6 +109,7 @@ class GroovyMain extends SimpleApplication {
     }
     
     def initKeys() {
+        handleAction("FirstPersonNavigation", new KeyTrigger(KeyInput.KEY_M), {boolean keyPressed, float tpf -> if (!keyPressed) {switchFirstPersonNavigation(!firstPersonNavigation)}})
         handleAction("ZoomOut", new KeyTrigger(KeyInput.KEY_H), {boolean keyPressed, float tpf -> if (!keyPressed) {flyCam.moveCamera(-10, false)}})
         handleAction("ZoomIn", new KeyTrigger(KeyInput.KEY_J), {boolean keyPressed, float tpf -> if (!keyPressed) {flyCam.moveCamera(10, false)}})
         handleAction("ViewSource", new KeyTrigger(KeyInput.KEY_V), {boolean keyPressed, float tpf -> if (!keyPressed) {displayViewSource()}})
@@ -196,7 +198,7 @@ class GroovyMain extends SimpleApplication {
         guiNode.attachChild(ch);
         
         help = makeHUDText(10, settings.getHeight() - guiFont.charSet.lineHeight, ColorRGBA.Blue) 
-        help.text = "Esc - quit, click - select, K - selection importers, I - selection imports, L - select modules, V - view source, H/J - zoom, R - run script"
+        help.text = "Esc - quit, M - toggle mouse mode, click - select, V - view source, H/J - zoom, R - run script"
         backgroundOperation = makeHUDText(10, settings.getHeight() - guiFont.charSet.lineHeight - guiFont.charSet.lineHeight *1.5, ColorRGBA.Red)       
         currentSelection = makeHUDText(settings.getWidth() / 2.5, guiFont.charSet.lineHeight, ColorRGBA.Orange)       
         selectionOrigin = makeHUDText(10, guiFont.charSet.lineHeight * 4, ColorRGBA.Brown)
@@ -354,16 +356,21 @@ class GroovyMain extends SimpleApplication {
     boolean displayingViewSource = false
     Nifty nifty
     
+    boolean firstPersonNavigation = false
+    public switchFirstPersonNavigation(boolean newValue) {
+       firstPersonNavigation = newValue
+       flyCam.enabled = firstPersonNavigation
+       inputManager.cursorVisible = !firstPersonNavigation
+    }
+    
     void displayViewSource() {
         if (displayingViewSource) {
             nifty.gotoScreen("nothing")
-            flyCam.setEnabled(true);
-            inputManager.setCursorVisible(false);
+            switchFirstPersonNavigation(true)
             displayingViewSource = false
         } else if (selected) {
             displayingViewSource = true
-            flyCam.setEnabled(false);
-            inputManager.setCursorVisible(true);
+            switchFirstPersonNavigation(false)
             nifty.gotoScreen("source")
         }
         

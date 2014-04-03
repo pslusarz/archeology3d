@@ -77,6 +77,10 @@ class Module implements Serializable{
 	 referencedBy.size() > 0
   }
 
+  def clearLibraryRefs() {
+      dependsOn.clear()
+  }  
+    
   def initLibrary(modules) {
 	  if (['VMS'].contains(name)) {
 		  return
