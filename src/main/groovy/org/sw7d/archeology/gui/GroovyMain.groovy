@@ -77,9 +77,7 @@ class GroovyMain extends SimpleApplication {
 
         rootNode.rotate(-1.5f, 0f, 0f)
 
-        cam.setLocation(new Vector3f(150f, 150f, -150f))
-        cam.setRotation(new Quaternion(-1.5f, 0f, 0f, 1f))
-        cam.lookAt(new Vector3f(-150f, -130f, 150f), rootNode.getLocalTranslation())
+        resetCamera()
         flyCam.setMoveSpeed((float) (flyCam.getMoveSpeed() * 10f));
         
         initKeys()
@@ -108,7 +106,14 @@ class GroovyMain extends SimpleApplication {
 
     }
     
+    def resetCamera() {
+        cam.setLocation(new Vector3f(150f, 150f, -150f))
+        cam.setRotation(new Quaternion(-1.5f, 0f, 0f, 1f))
+        cam.lookAt(new Vector3f(-150f, -130f, 150f), rootNode.getLocalTranslation())
+    }
+    
     def initKeys() {
+        handleAction("ResetCamera", new KeyTrigger(KeyInput.KEY_C), {boolean keyPressed, float tpf -> if (!keyPressed) {resetCamera()}})
         handleAction("FirstPersonNavigation", new KeyTrigger(KeyInput.KEY_M), {boolean keyPressed, float tpf -> if (!keyPressed) {switchFirstPersonNavigation(!firstPersonNavigation)}})
         handleAction("ZoomOut", new KeyTrigger(KeyInput.KEY_H), {boolean keyPressed, float tpf -> if (!keyPressed) {flyCam.moveCamera(-10, false)}})
         handleAction("ZoomIn", new KeyTrigger(KeyInput.KEY_J), {boolean keyPressed, float tpf -> if (!keyPressed) {flyCam.moveCamera(10, false)}})
@@ -198,7 +203,7 @@ class GroovyMain extends SimpleApplication {
         guiNode.attachChild(ch);
         
         help = makeHUDText(10, settings.getHeight() - guiFont.charSet.lineHeight, ColorRGBA.Blue) 
-        help.text = "Esc - quit, M - toggle mouse mode, click - select, V - view source, H/J - zoom, R - run script"
+        help.text = "Esc - quit, M - toggle mouse mode, click - select, V - view source, H/J - zoom, C - center camera, R - run script"
         backgroundOperation = makeHUDText(10, settings.getHeight() - guiFont.charSet.lineHeight - guiFont.charSet.lineHeight *1.5, ColorRGBA.Red)       
         currentSelection = makeHUDText(settings.getWidth() / 2.5, guiFont.charSet.lineHeight, ColorRGBA.Orange)       
         selectionOrigin = makeHUDText(10, guiFont.charSet.lineHeight * 4, ColorRGBA.Brown)
@@ -284,14 +289,17 @@ class GroovyMain extends SimpleApplication {
         
     }
     
-    //List<Geometry> boxesToBeBatched = []
+    Map<ColorRGBA, Material> materialsByColor = [:].withDefault{ColorRGBA color -> 
+      Material mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md")      
+      mat.setColor("Color", color)
+      return mat
+    }
+    
     void makeUnitBox(def x, y, z, color) {
         Vector3f sunVector = new Vector3f(x,y,z)
         Box b = new Box(sunVector, 0.5f, 0.5f, 0.5f);
         Geometry geom = new Geometry("Box", b);
-        Material mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");      
-        mat.setColor("Color", color);
-        geom.setMaterial(mat);
+        geom.setMaterial(materialsByColor[color]);
         batchNode.attachChild(geom) 
     }
     
