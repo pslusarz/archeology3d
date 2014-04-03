@@ -48,7 +48,7 @@ class GroovyMain extends SimpleApplication {
         new GroovyMain(pauseOnLostFocus: false, displayStatView: false, displayFps: false, showSettings: false, settings: settings).start()
     }
     
-    Material mat 
+    //Material mat 
     Map<String, ArcheologyFile> selectedFilesByName = [:]
     Map<String, Geometry> spatialsByName = [:]
     Map<Geometry, DataPoint3d> dataPointsByGeometry = [:]
@@ -82,7 +82,7 @@ class GroovyMain extends SimpleApplication {
         
         initKeys()
         initCrossHairs() 
-        mat = makeMaterial(ColorRGBA.Blue)
+        //mat = makeMaterial(ColorRGBA.Blue)
 
         ShowSourceController showSourceController = new ShowSourceController()
         stateManager.attach(showSourceController)
@@ -163,10 +163,6 @@ class GroovyMain extends SimpleApplication {
         
     }
     
-    void reset(Geometry geometry) {
-        batchNode.attachChild(geometry)
-        geometry.setMaterial(mat)
-    }
     
     void select(Geometry selection) {
         selected = selection
@@ -220,15 +216,6 @@ class GroovyMain extends SimpleApplication {
         return result
     }
     
-    Material makeMaterial(ColorRGBA color) {
-        Material result = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
-        result.setBoolean('UseMaterialColors', true)
-        result.setColor('Diffuse', color)
-        result.setColor('Ambient', color)
-        result.setColor('Specular', ColorRGBA.White)
-        result.setFloat('Shininess', 64f)
-        return result
-    }
     
     
     long lastUpdateTime = System.currentTimeMillis()
@@ -290,8 +277,12 @@ class GroovyMain extends SimpleApplication {
     }
     
     Map<ColorRGBA, Material> materialsByColor = [:].withDefault{ColorRGBA color -> 
-      Material mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md")      
-      mat.setColor("Color", color)
+      Material mat = new Material(assetManager,  "Common/MatDefs/Light/Lighting.j3md")      
+      mat.setBoolean('UseMaterialColors', true)
+      mat.setColor('Diffuse', color)
+      mat.setColor('Ambient', color)
+      mat.setColor('Specular', ColorRGBA.White)
+      mat.setFloat('Shininess', 64f)
       return mat
     }
     
@@ -356,11 +347,10 @@ class GroovyMain extends SimpleApplication {
         spatialsByName[dataPoint.name] = geom
         dataPointsByGeometry[geom] = dataPoint
         TangentBinormalGenerator.generate(b);
-        geom.setMaterial(mat);
+        geom.setMaterial(materialsByColor[ColorRGBA."${dataPoint.color}"]);
         batchNode.attachChild(geom);     
     }
-    
-    //boolean displayingSelectModulesDialog = false
+
     boolean displayingViewSource = false
     Nifty nifty
     
@@ -384,37 +374,6 @@ class GroovyMain extends SimpleApplication {
         
     }
      
-    //    void displaySelectModulesDialog() {
-    //        if (displayingSelectModulesDialog) { return}
-    //        displayingSelectModulesDialog = true
-    //        //nifty.fromXml("Interface/selectModule.xml", "start", new SelectModuleController(app: this));
-    //        nifty.gotoScreen("start")
-    //        flyCam.setEnabled(false);
-    //        inputManager.setCursorVisible(true);
-    //    }
-    
-    //    void doneSelectingModules(List<String> selectedModules2)  { 
-    //        println "Selected modules: "+selectedModules2
-    //        nifty.gotoScreen("nothing")
-    //        flyCam.setEnabled(true);
-    //        inputManager.setCursorVisible(false);
-    //        selectModules(selectedModules2)
-    //        
-    //        displayAllMeetingCriteria {Geometry toBeDisplayed -> true}
-    //        displayingSelectModulesDialog = false
-    //    }
-    
-    //    def selectModules(List<String> selectedModules2) {
-    //        List<ArcheologyFile> selectedModuleFiles = provider.modules.findAll {selectedModules2.contains(it.name)}*.files.flatten()
-    //        selectedFilesByName.clear()
-    //        selectedModuleFiles.each {
-    //            selectedFilesByName[it.javaName()] = it
-    //        }
-    //        this.selectedModules = selectedModules2
-    //        if (selected && !selectedFilesByName[selected.name]) {
-    //            select(null)
-    //        }
-    //    }
     
     Modules getAvailableModules() {
         Modules.create()

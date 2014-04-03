@@ -4,5 +4,6 @@ class DataPoint3d {
     String name
     int x, y, z
     Object delegate
+    String color = "Blue"
 }
 

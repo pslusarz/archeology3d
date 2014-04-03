@@ -3,19 +3,19 @@ package org.sw7d.archeology
 import java.util.List
 
 class Modules extends ArrayList<Module> {
-    static String serializedFile = "apache-modules.pickle"
+    static String serializedFile = "carfax-modules.pickle"
     
     public static Modules loadedModules
 
     public Modules initFromFilesystem() {
-        String root = '../apache-data/'
+        String root = '../archeology/'
         println "reading from file system"
         new File("./serialized-data/apache/").mkdirs()
         new File(root).eachDir { File repository ->
             repository.eachDir{ File moduleDir ->
                 if (moduleDir.name != '.DS_Store') {
                     Module module
-                    File serializedModuleFile = new File("./serialized-data/apache/${moduleDir.name}.bin")
+                    File serializedModuleFile = new File("./serialized-data/carfax/${moduleDir.name}.bin")
                     if (!serializedModuleFile.exists()) {
                         module = new Module(name: moduleDir.name, path: moduleDir.absolutePath, repository: repository.name)
                         println "  init from raw folder: " + module.name
@@ -119,10 +119,10 @@ class Modules extends ArrayList<Module> {
 
     public static Modules create() {
         if (!loadedModules) {         
-            //if (!new File(serializedFile).exists()) {
-                loadedModules = new Modules().initFromFilesystem() //.serialize()
-            //}
-            //loadedModules = initFromPickle()
+            if (!new File(serializedFile).exists()) {
+                loadedModules = new Modules().initFromFilesystem().serialize()
+            }
+            loadedModules = initFromPickle()
         }    
         return loadedModules
     }
