@@ -1,3 +1,8 @@
 /build/
-#apache-modules.pickle
+apache-modules.pickle
 /results/
+/serialized-data/
+*.bin
+hs_err_pid*.log
+nbproject/genfiles.properties
+nbproject/private/private.properties
