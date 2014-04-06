@@ -73,7 +73,7 @@ class GroovyMain extends SimpleApplication {
         viewPort.setBackgroundColor(ColorRGBA.White);
         makeLight(100,1500,1500, ColorRGBA.White) 
         
-        markOrigin()
+        //markOrigin()
 
         rootNode.rotate(-1.5f, 0f, 0f)
 
@@ -151,12 +151,13 @@ class GroovyMain extends SimpleApplication {
                     if (value instanceof DataPointProvider) {
                         DataPointProvider newProvider = value as DataPointProvider
                         newProvider.loadedModules = false
-                        batchNode.detachAllChildren()
+                        
                         spatialsByName.clear()
                         dataPointsByGeometry.clear()
                         provider = newProvider
-                        markOrigin()
+                        
                         newProvider.loadedModules = true
+                        displayDataPoints()
                     }
                 }
             })
@@ -217,9 +218,10 @@ class GroovyMain extends SimpleApplication {
     }
     
     
-    
+    boolean needToDetachBatchNode = false
+    boolean batchNodeDetached = false
+    boolean needToAttachBatchNode = false
     long lastUpdateTime = System.currentTimeMillis()
-    boolean lastBox = false
     @Override
     public void simpleUpdate(float tpf) {
         if (!provider.loadedModules) {
@@ -229,24 +231,32 @@ class GroovyMain extends SimpleApplication {
             }
             return
         }
-        DataPoint3d dataPoint = provider.getNextDataPoint()
-        if (dataPoint) {
-            makeBox(dataPoint)
-            backgroundOperation.text = "Initializing classes (${provider.dataPointCompletionRatio})"
-            lastBox = true
+        if (needToDetachBatchNode) {
+            needToDetachBatchNode = false
             rootNode.detachChild(batchNode)
-        } else {
-            if (lastBox) {
-                backgroundOperation.text = ""
-                //jme3tools.optimize.GeometryBatchFactory.optimize(batchNode)
-                println "now preparing to display all nodes "+new Date()
-
-                batchNode.batch()
-                rootNode.attachChild(batchNode)
-                lastBox = false
-                println "now done preparing to display all nodes "+new Date()
-            }
+            batchNodeDetached = true
+        } else if (needToAttachBatchNode) {
+            rootNode.attachChild(batchNode)
+            needToAttachBatchNode = false
         }
+        //        DataPoint3d dataPoint = provider.getNextDataPoint()
+        //        if (dataPoint) {
+        //            makeBox(dataPoint)
+        //            backgroundOperation.text = "Initializing classes (${provider.dataPointCompletionRatio})"
+        //            lastBox = true
+        //            rootNode.detachChild(batchNode)
+        //        } else {
+        //            if (lastBox) {
+        //                backgroundOperation.text = ""
+        //                //jme3tools.optimize.GeometryBatchFactory.optimize(batchNode)
+        //                println "now preparing to display all nodes "+new Date()
+        //
+        //                batchNode.batch()
+        //                rootNode.attachChild(batchNode)
+        //                lastBox = false
+        //                println "now done preparing to display all nodes "+new Date()
+        //            }
+        //        }
         
            
     } 
@@ -259,10 +269,39 @@ class GroovyMain extends SimpleApplication {
                 //selectModules (provider.modules.collect {it.name})      
                 backgroundOperation.setText("")
                 provider.loadedModules = true
+                displayDataPoints()
             }
         }.start()
         
         
+    }
+    
+    void displayDataPoints() {
+        new Thread() {
+            void run() {
+                //rootNode.detachChild(batchNode)
+                batchNodeDetached = false
+                needToDetachBatchNode = true
+                println "requesting detach batch node"
+                while (!batchNodeDetached) {
+                    sleep(500)
+                }
+                batchNode.detachAllChildren()
+                markOrigin()
+                DataPoint3d dataPoint = provider.getNextDataPoint()
+                while (dataPoint) {
+                    makeBox(dataPoint)
+                    //backgroundOperation.text = "Initializing data points (${provider.dataPointCompletionRatio})"
+                    dataPoint = provider.getNextDataPoint()
+                }
+                //backgroundOperation.text = "Now preparing to display all data points"                        
+                println "now preparing to display all nodes "
+                batchNode.batch()
+                //rootNode.attachChild(batchNode)
+                needToAttachBatchNode = true
+                backgroundOperation.text = ""
+            }
+        }.start()
     }
     
     
@@ -277,13 +316,13 @@ class GroovyMain extends SimpleApplication {
     }
     
     Map<ColorRGBA, Material> materialsByColor = [:].withDefault{ColorRGBA color -> 
-      Material mat = new Material(assetManager,  "Common/MatDefs/Light/Lighting.j3md")      
-      mat.setBoolean('UseMaterialColors', true)
-      mat.setColor('Diffuse', color)
-      mat.setColor('Ambient', color)
-      mat.setColor('Specular', ColorRGBA.White)
-      mat.setFloat('Shininess', 64f)
-      return mat
+        Material mat = new Material(assetManager,  "Common/MatDefs/Light/Lighting.j3md")      
+        mat.setBoolean('UseMaterialColors', true)
+        mat.setColor('Diffuse', color)
+        mat.setColor('Ambient', color)
+        mat.setColor('Specular', ColorRGBA.White)
+        mat.setFloat('Shininess', 64f)
+        return mat
     }
     
     void makeUnitBox(def x, y, z, color) {
@@ -356,9 +395,9 @@ class GroovyMain extends SimpleApplication {
     
     boolean firstPersonNavigation = false
     public switchFirstPersonNavigation(boolean newValue) {
-       firstPersonNavigation = newValue
-       flyCam.enabled = firstPersonNavigation
-       inputManager.cursorVisible = !firstPersonNavigation
+        firstPersonNavigation = newValue
+        flyCam.enabled = firstPersonNavigation
+        inputManager.cursorVisible = !firstPersonNavigation
     }
     
     void displayViewSource() {

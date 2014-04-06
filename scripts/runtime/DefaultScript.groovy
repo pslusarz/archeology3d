@@ -14,6 +14,12 @@ println "here be start"
 
 List<DataPoint3d> dp = []
 modules.sort {-it.files.findAll{it.javaName()}.size()}.eachWithIndex { Module module, int index ->
-    dp << new DataPoint3d(name: module.repository+": "+module.name, x: index *2, z: module.files.findAll{it.javaName()}.size() / 10, y: 0)  
+    def javaFiles = module.files.findAll{it.javaName()}?:[]
+    if (!javaFiles) {
+        println "no java files found: "+module.name
+    }
+    int totalCommits = javaFiles.sum {it.commits.size()}
+    int commitsPerJavaFile = totalCommits / javaFiles.size()
+    dp << new DataPoint3d(name: module.repository+": "+module.name, x: index *2, z: module.files.findAll{it.javaName()}.size() / 10, y: commitsPerJavaFile)  
 }
 return new DataPointProvider(zLabel: "java files / 10", yLabel: "n/a", xLabel: "Rank * 2", dataPoints: dp)
