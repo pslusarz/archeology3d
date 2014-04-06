@@ -41,7 +41,7 @@ import com.jme3.collision.CollisionResult
 class GroovyMain extends SimpleApplication {
     static void main(args){
         AppSettings settings = new AppSettings(true)
-        settings.setResolution(1280,1048)
+        settings.setResolution(1550,1150)
         settings.vSync = true
         settings.samples = 0
         settings.title = 'Archeology3D'
@@ -134,31 +134,37 @@ class GroovyMain extends SimpleApplication {
         
         handleAction("RunScript", new KeyTrigger(KeyInput.KEY_R), 
             {boolean keyPressed, float tpf -> if (!keyPressed) {
-                    Binding binding = new Binding();
-                    binding.setVariable("foo", new Integer(2));
-                    binding.setVariable("modules", Modules.create())
-                    GroovyShell shell = new GroovyShell(binding);
-                    File scriptFile = new File("scripts/runtime/DefaultScript.groovy")
-                    println "script file needs to be in: "+scriptFile.canonicalPath+ " (${scriptFile.exists()?'it exists':'it does not exist'})"
-                    Object value
-                    try {
-                        value = shell.evaluate(scriptFile);
-                    } catch (Exception e) {
-                        e.printStackTrace()
-                        println "error evaluating script: "+e.getMessage()
-                    }
-                    println "returned value: "+value
-                    if (value instanceof DataPointProvider) {
-                        DataPointProvider newProvider = value as DataPointProvider
-                        newProvider.loadedModules = false
+                    new Thread() {
+                        void run() {
+                            Binding binding = new Binding();
+                            binding.setVariable("modules", Modules.create())
+                            GroovyShell shell = new GroovyShell(binding);
+                            File scriptFile = new File("scripts/runtime/DefaultScript.groovy")
+                            backgroundOperation.text = "Don't press anything. Running script: "+scriptFile.canonicalPath
+                            Object value
+                            try {
+                                value = shell.evaluate(scriptFile);
+                            } catch (Exception e) {
+                                e.printStackTrace()
+                                backgroundOperation.text = "error evaluating script: "+e.getMessage()
+                            }
+                            backgroundOperation.text = "Done, now displaying results. "+backgroundOperation.text 
+                            println "returned value: "+value
+                            if (value instanceof DataPointProvider) {
+                                DataPointProvider newProvider = value as DataPointProvider
+                                newProvider.loadedModules = false
                         
-                        spatialsByName.clear()
-                        dataPointsByGeometry.clear()
-                        provider = newProvider
+                                spatialsByName.clear()
+                                dataPointsByGeometry.clear()
+                                provider = newProvider
                         
-                        newProvider.loadedModules = true
-                        displayDataPoints()
-                    }
+                                newProvider.loadedModules = true
+                                displayDataPoints()
+                            }  
+                        }
+                    }.start()
+                    
+                
                 }
             })
         
@@ -291,10 +297,10 @@ class GroovyMain extends SimpleApplication {
                 DataPoint3d dataPoint = provider.getNextDataPoint()
                 while (dataPoint) {
                     makeBox(dataPoint)
-                    //backgroundOperation.text = "Initializing data points (${provider.dataPointCompletionRatio})"
+                    backgroundOperation.text = "Initializing data points (${provider.dataPointCompletionRatio})"
                     dataPoint = provider.getNextDataPoint()
                 }
-                //backgroundOperation.text = "Now preparing to display all data points"                        
+                backgroundOperation.text = "Now preparing to display all data points"                        
                 println "now preparing to display all nodes "
                 batchNode.batch()
                 //rootNode.attachChild(batchNode)
@@ -378,7 +384,10 @@ class GroovyMain extends SimpleApplication {
     void makeBox(DataPoint3d dataPoint) {
         //size 2 box, useful for drilling down in heavily populated zones
         int boxHeight = 3
-        int boxSideLength = 1
+        if (dataPoint.type == "bar") {
+            boxHeight = dataPoint.z
+        }
+        int boxSideLength = dataPoint.size
         Box b = new Box(new Vector3f(dataPoint.x,dataPoint.y, dataPoint.z - boxHeight), new Vector3f(dataPoint.x + boxSideLength,dataPoint.y + boxSideLength, dataPoint.z));
         //Box b = new Box(new Vector3f(popularity / 10,imports / 10, 0), new Vector3f(popularity / 10 + 1,imports / 10+1, size/100));
         Geometry geom = new Geometry(dataPoint.name, b);
