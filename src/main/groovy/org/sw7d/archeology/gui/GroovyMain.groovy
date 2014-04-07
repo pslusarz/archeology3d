@@ -388,6 +388,9 @@ class GroovyMain extends SimpleApplication {
             boxHeight = dataPoint.z
         }
         int boxSideLength = dataPoint.size
+        if (dataPoint.size != 1) {
+            println "yo data point ${dataPoint.delegate} all messed up" + dataPoint.size
+        }
         Box b = new Box(new Vector3f(dataPoint.x,dataPoint.y, dataPoint.z - boxHeight), new Vector3f(dataPoint.x + boxSideLength,dataPoint.y + boxSideLength, dataPoint.z));
         //Box b = new Box(new Vector3f(popularity / 10,imports / 10, 0), new Vector3f(popularity / 10 + 1,imports / 10+1, size/100));
         Geometry geom = new Geometry(dataPoint.name, b);
