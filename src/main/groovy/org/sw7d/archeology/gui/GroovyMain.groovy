@@ -37,6 +37,7 @@ import com.jme3.system.AppSettings
 import org.sw7d.archeology.data.DefaultDataPointProvider
 import com.jme3.scene.BatchNode
 import com.jme3.collision.CollisionResult
+import java.util.concurrent.Callable
 
 class GroovyMain extends SimpleApplication {
     static void main(args){
@@ -59,6 +60,7 @@ class GroovyMain extends SimpleApplication {
     BitmapText help
     DataPointProvider provider
     BatchNode batchNode
+    BitmapFont fnt
     
     @Override
     void simpleInitApp() {
@@ -98,7 +100,7 @@ class GroovyMain extends SimpleApplication {
         
         
         
-        
+        fnt = assetManager.loadFont("Interface/Fonts/Default.fnt");
         makeGraphFromPickle()
 
         
@@ -240,10 +242,14 @@ class GroovyMain extends SimpleApplication {
         if (needToDetachBatchNode) {
             needToDetachBatchNode = false
             rootNode.detachChild(batchNode)
+            batchNode.detachAllChildren()
             batchNodeDetached = true
         } else if (needToAttachBatchNode) {
             rootNode.attachChild(batchNode)
             needToAttachBatchNode = false
+            batchNodeDetached = false
+        } else if (batchNodeDetached) {
+            backgroundOperation.text = "Initializing data points (${provider.dataPointCompletionRatio})"
         }
         //        DataPoint3d dataPoint = provider.getNextDataPoint()
         //        if (dataPoint) {
@@ -292,15 +298,23 @@ class GroovyMain extends SimpleApplication {
                 while (!batchNodeDetached) {
                     sleep(500)
                 }
-                batchNode.detachAllChildren()
+                println "batch node detached, should be safe to detach children from it"
+                
                 markOrigin()
                 DataPoint3d dataPoint = provider.getNextDataPoint()
                 while (dataPoint) {
                     makeBox(dataPoint)
-                    backgroundOperation.text = "Initializing data points (${provider.dataPointCompletionRatio})"
+                    
+//      this.enqueue(new Callable() {
+//            public Object call() throws Exception {
+//                backgroundOperation.text = "Initializing data points (${provider.dataPointCompletionRatio})"
+//                return null;
+//            }
+//        })              
+                    //backgroundOperation.text = "Initializing data points (${provider.dataPointCompletionRatio})"
                     dataPoint = provider.getNextDataPoint()
                 }
-                backgroundOperation.text = "Now preparing to display all data points"                        
+                //backgroundOperation.text = "Now preparing to display all data points"                        
                 println "now preparing to display all nodes "
                 batchNode.batch()
                 //rootNode.attachChild(batchNode)
@@ -340,6 +354,7 @@ class GroovyMain extends SimpleApplication {
     }
     
     void markOrigin() {
+        println "marking origin"
         (1..20).each {
             makeUnitBox(10*it,0,0, ColorRGBA.Black)
         }
@@ -350,7 +365,7 @@ class GroovyMain extends SimpleApplication {
             makeUnitBox(0,0,10*it, ColorRGBA.LightGray)
         }
         
-        BitmapFont fnt = assetManager.loadFont("Interface/Fonts/Default.fnt");
+        
         BitmapText txt = new BitmapText(fnt, false);
         txt.setBox(new Rectangle(0, 30, 100, 0));       
         txt.setSize( 15f );
@@ -387,10 +402,7 @@ class GroovyMain extends SimpleApplication {
         if (dataPoint.type == "bar") {
             boxHeight = dataPoint.z
         }
-        int boxSideLength = dataPoint.size
-        if (dataPoint.size != 1) {
-            println "yo data point ${dataPoint.delegate} all messed up" + dataPoint.size
-        }
+        int boxSideLength = Math.max(dataPoint.size, 1)
         Box b = new Box(new Vector3f(dataPoint.x,dataPoint.y, dataPoint.z - boxHeight), new Vector3f(dataPoint.x + boxSideLength,dataPoint.y + boxSideLength, dataPoint.z));
         //Box b = new Box(new Vector3f(popularity / 10,imports / 10, 0), new Vector3f(popularity / 10 + 1,imports / 10+1, size/100));
         Geometry geom = new Geometry(dataPoint.name, b);

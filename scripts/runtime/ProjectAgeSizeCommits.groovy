@@ -14,34 +14,24 @@ println "here be start"
 
 //active projects
 List<DataPoint3d> dp = []
-
+modules.sort {-it.files.findAll{it.javaName()}.size()}.eachWithIndex { Module module, int index ->
+    def javaFiles = module.files.findAll{it.javaName()}?:[]
+    if (!javaFiles) {
+        println "no java files found: "+module.name
+    }
+    int totalCommits = javaFiles.sum {it.commits.size()} ?: 0
+    int commitsPerJavaFile = totalCommits * 5 / (javaFiles.size() ?: 1)
+    Date firstCommit = module.files*.commits.collect().flatten().min() ?: new Date() - 100000
+    Date lastCommit = module.files*.commits.collect().flatten().max() ?: new Date() - 10000
+    String color = "DarkGray" // 7+ years
     Date today = new Date()
-    modules*.files.flatten().findAll{it.javaName() && !it.javaName().startsWith('java') && 
-         !it.canonicalPath.contains('thrift') && !it.canonicalPath.contains('protobuf/generated') && 
-         !it.canonicalPath.contains('codegen')}.sort{-it.linesCount}.eachWithIndex { ArcheologyFile file, int i ->
-        if (i < 5000) {
-            if (['ant', 'cassandra', 'camel'].contains(file.module.name) ) {
-            println file.module.name+":"+file.javaName()+" ${file.canonicalPath}  "+file.commits.size()+"\t\t"+file.linesCount    
-            } else {
-           println file.module.name+":"+file.javaName()+"  ${file.canonicalPath} "+file.commits.size()+"\t"+file.linesCount+"\t" 
-            }
-        }
-        
-    
-        
-    String color = 'DarkGray'
-    if (file.module.name == 'camel') {  
+    if (today - lastCommit <  180) {  // 1 year
         color = "Red"
-    } else if (file.module.name == 'ant') { // 2 years
+    } else if (today - lastCommit  < 360) { // 2 years
         color = "Orange"
     } 
-    else if (file.module.name == 'httpclient') {  // 3 years
+    else if (today - lastCommit < 720) {  // 3 years
         color = "Yellow"
-    } 
-    else if (file.module.name == 'cassandra') {  // 3 years
-        color = "Cyan"
-    } else if (file.module.name == 'hadoop-common') {  // 3 years
-        color = "Blue"
     } 
     
 //    if (lastCommit -firstCommit <  360) {  // 1 year
@@ -70,11 +60,8 @@ List<DataPoint3d> dp = []
 //    } else if (module.name.startsWith('tomcat')) {
 //        color = 'Cyan'
 //    } else {color = 'DarkGray'}
-
-      if (color != 'DarkGray') {
-            dp << new DataPoint3d(name: file.javaName(), x: file.popularity * 1000 / file.module.files.size(), z: file.commits.size()/3, y: (file.linesCount) / 10, delegate: file, color: color, size: 4)
-      }      
-    }
-    //dp << new DataPoint3d(name: module.repository+": "+module.name, x: (today -firstCommit) / 70, z: module.files.findAll{it.javaName()}.size() / 100, y: commitsPerJavaFile, type: "box", color: color, size:1)  
+    dp << new DataPoint3d(name: module.repository+": "+module.name, x: (today -firstCommit) / 70, z: module.files.findAll{it.javaName()}.size() / 100, y: commitsPerJavaFile, type: "box", color: color, size:1)  
     //}
-return new DataPointProvider(zLabel: "commits", yLabel: "size", xLabel: "relative popularity", dataPoints: dp)
+}
+return new DataPointProvider(zLabel: "java files / 100", yLabel: "Commits per file * 5", xLabel: "Age (days / 70)", dataPoints: dp)
+
