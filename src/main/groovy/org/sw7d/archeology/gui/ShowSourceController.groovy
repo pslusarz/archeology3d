@@ -33,6 +33,10 @@ class ShowSourceController extends AbstractAppState implements ScreenController 
         //println "presumably this exists: " + actualFileLocation
         File actualFile = new File(af.getCanonicalPath())
         println actualFile.absolutePath + " exists? " + actualFile.exists()
+        if (!actualFile.exists()) {
+            actualFile = new File(af.canonicalPath.replace('apache-data', 'archeology3d-data/apache')) 
+            println "trying another location: "+ actualFile.absolutePath + " exists? " + actualFile.exists()
+        }
         if (actualFile.exists()) {
             String text = actualFile.text //new File("src/org/sw7d/archeology/gui/GroovyMain.groovy").text
             tf.text = text

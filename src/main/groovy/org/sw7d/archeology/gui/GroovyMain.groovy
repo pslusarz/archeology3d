@@ -175,7 +175,7 @@ class GroovyMain extends SimpleApplication {
     
     void select(Geometry selection) {
         selected = selection
-        currentSelection.text = "Selected: ${selected?.name?:'none'}"
+        currentSelection.text = selected?.name ?: ""
         DataPoint3d dp = dataPointsByGeometry[selection]
         if (dp) {
             selectionOrigin.text = "${provider.xLabel}: ${dp.x}\n${provider.yLabel}: ${dp.y}\n${provider.zLabel}: ${dp.z}"
@@ -210,7 +210,7 @@ class GroovyMain extends SimpleApplication {
         help = makeHUDText(10, settings.getHeight() - guiFont.charSet.lineHeight, ColorRGBA.Blue) 
         help.text = "Esc - quit, M - toggle mouse mode, click - select, V - view source, H/J - zoom, C - center camera, R - run script"
         backgroundOperation = makeHUDText(10, settings.getHeight() - guiFont.charSet.lineHeight - guiFont.charSet.lineHeight *1.5, ColorRGBA.Red)       
-        currentSelection = makeHUDText(settings.getWidth() / 2.5, guiFont.charSet.lineHeight, ColorRGBA.Orange)       
+        currentSelection = makeHUDText(settings.getWidth() / 2.5, settings.getHeight() / 1.8 , ColorRGBA.Orange)   //guiFont.charSet.lineHeight    
         selectionOrigin = makeHUDText(10, guiFont.charSet.lineHeight * 4, ColorRGBA.Brown)
 
     }

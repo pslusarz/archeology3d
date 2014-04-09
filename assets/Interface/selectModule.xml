@@ -18,7 +18,7 @@
     </screen--> 
     <screen id="source" controller="org.sw7d.archeology.gui.ShowSourceController">
         <layer childLayout="center">
-            <panel id="panel" height="90%" width="30%" align="left" valign="top" childLayout="center" visibleToMouse="true">
+            <panel id="panel" height="90%" width="60%" align="left" valign="top" childLayout="center" visibleToMouse="true">
                 <control id="sourceScrollPanel" name="scrollPanel" align="left" valign="top" width="100%" height="100%" style="nifty-listbox">
                     <control id="sourcecode" name="label" text="no source code loaded" align="left" width="300%" height="*"
                             textHAlign="left" textVAlign="top" color="#000f"/>
