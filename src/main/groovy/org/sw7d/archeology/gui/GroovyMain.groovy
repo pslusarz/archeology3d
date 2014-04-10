@@ -42,7 +42,7 @@ import java.util.concurrent.Callable
 class GroovyMain extends SimpleApplication {
     static void main(args){
         AppSettings settings = new AppSettings(true)
-        settings.setResolution(1550,1150)
+        settings.setResolution(1024,768)
         settings.vSync = true
         settings.samples = 0
         settings.title = 'Archeology3D'
@@ -200,6 +200,7 @@ class GroovyMain extends SimpleApplication {
     
     def initCrossHairs() {
         guiFont = assetManager.loadFont("Interface/Fonts/Default.fnt");
+        
         BitmapText ch = new BitmapText(guiFont, false);
         ch.setSize(guiFont.getCharSet().getRenderedSize() * 2);
         ch.setText("+"); // crosshairs
@@ -210,14 +211,18 @@ class GroovyMain extends SimpleApplication {
         help = makeHUDText(10, settings.getHeight() - guiFont.charSet.lineHeight, ColorRGBA.Blue) 
         help.text = "Esc - quit, M - toggle mouse mode, click - select, V - view source, H/J - zoom, C - center camera, R - run script"
         backgroundOperation = makeHUDText(10, settings.getHeight() - guiFont.charSet.lineHeight - guiFont.charSet.lineHeight *1.5, ColorRGBA.Red)       
-        currentSelection = makeHUDText(settings.getWidth() / 2.5, settings.getHeight() / 1.8 , ColorRGBA.Orange)   //guiFont.charSet.lineHeight    
+        currentSelection = makeHUDText(settings.getWidth() / 2.5, settings.getHeight() / 1.8 , ColorRGBA.Black, 2)   //guiFont.charSet.lineHeight    
         selectionOrigin = makeHUDText(10, guiFont.charSet.lineHeight * 4, ColorRGBA.Brown)
 
     }
     
     BitmapText makeHUDText(x, y, ColorRGBA color) {
+        return makeHUDText(x, y, color, 1)
+    }
+    
+    BitmapText makeHUDText(x, y, ColorRGBA color, double scale) {
         BitmapText result = new BitmapText(guiFont, false);
-        result.setSize(guiFont.getCharSet().getRenderedSize());      // font size
+        result.setSize((guiFont.getCharSet().getRenderedSize()* scale) as int);      // font size
         result.setColor(color);                             // font color
         result.setText("");             // the text
         result.setLocalTranslation((float) x, (float) y, 0f); // position
