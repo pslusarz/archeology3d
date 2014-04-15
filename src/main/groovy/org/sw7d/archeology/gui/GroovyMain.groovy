@@ -61,6 +61,7 @@ class GroovyMain extends SimpleApplication {
     DataPointProvider provider
     BatchNode batchNode
     BitmapFont fnt
+    boolean loadingDataPoints = false
     
     @Override
     void simpleInitApp() {
@@ -74,8 +75,6 @@ class GroovyMain extends SimpleApplication {
         
         viewPort.setBackgroundColor(ColorRGBA.White);
         makeLight(100,1500,1500, ColorRGBA.White) 
-        
-        //markOrigin()
 
         rootNode.rotate(-1.5f, 0f, 0f)
 
@@ -84,7 +83,6 @@ class GroovyMain extends SimpleApplication {
         
         initKeys()
         initCrossHairs() 
-        //mat = makeMaterial(ColorRGBA.Blue)
 
         ShowSourceController showSourceController = new ShowSourceController()
         stateManager.attach(showSourceController)
@@ -230,10 +228,6 @@ class GroovyMain extends SimpleApplication {
         return result
     }
     
-    
-    boolean needToDetachBatchNode = false
-    boolean batchNodeDetached = false
-    boolean needToAttachBatchNode = false
     long lastUpdateTime = System.currentTimeMillis()
     @Override
     public void simpleUpdate(float tpf) {
@@ -243,37 +237,9 @@ class GroovyMain extends SimpleApplication {
                 backgroundOperation.text = backgroundOperation.text+"."
             }
             return
+        } else if (loadingDataPoints) {
+            backgroundOperation.text = "Initializing data points (${provider.getDataPointCompletionRatio()})"
         }
-        if (needToDetachBatchNode) {
-            needToDetachBatchNode = false
-            rootNode.detachChild(batchNode)
-            batchNode.detachAllChildren()
-            batchNodeDetached = true
-        } else if (needToAttachBatchNode) {
-            rootNode.attachChild(batchNode)
-            needToAttachBatchNode = false
-            batchNodeDetached = false
-        } else if (batchNodeDetached) {
-            backgroundOperation.text = "Initializing data points (${provider.dataPointCompletionRatio})"
-        }
-        //        DataPoint3d dataPoint = provider.getNextDataPoint()
-        //        if (dataPoint) {
-        //            makeBox(dataPoint)
-        //            backgroundOperation.text = "Initializing classes (${provider.dataPointCompletionRatio})"
-        //            lastBox = true
-        //            rootNode.detachChild(batchNode)
-        //        } else {
-        //            if (lastBox) {
-        //                backgroundOperation.text = ""
-        //                //jme3tools.optimize.GeometryBatchFactory.optimize(batchNode)
-        //                println "now preparing to display all nodes "+new Date()
-        //
-        //                batchNode.batch()
-        //                rootNode.attachChild(batchNode)
-        //                lastBox = false
-        //                println "now done preparing to display all nodes "+new Date()
-        //            }
-        //        }
         
            
     } 
@@ -293,37 +259,47 @@ class GroovyMain extends SimpleApplication {
         
     }
     
+    def detachBatchNode() {
+        enqueue (
+            new Callable () {
+                public Object call() {
+                    rootNode.detachChild(batchNode)
+                    batchNode.detachAllChildren()
+                    return null
+                }
+            }
+        ).get()
+    }
+    
+    def attachBatchNode() {
+        enqueue (
+            new Callable<Object> () {
+                public Object call() {
+                    rootNode.attachChild(batchNode)
+                    return null
+                }
+            }
+        )
+    }
+    
     void displayDataPoints() {
         new Thread() {
             void run() {
-                //rootNode.detachChild(batchNode)
-                batchNodeDetached = false
-                needToDetachBatchNode = true
-                println "requesting detach batch node"
-                while (!batchNodeDetached) {
-                    sleep(500)
-                }
-                println "batch node detached, should be safe to detach children from it"
+
+                detachBatchNode()
+                loadingDataPoints = true
+                println "batch node detached, should be safe to add children from it in a thread"
                 
                 markOrigin()
                 DataPoint3d dataPoint = provider.getNextDataPoint()
                 while (dataPoint) {
                     makeBox(dataPoint)
-                    
-//      this.enqueue(new Callable() {
-//            public Object call() throws Exception {
-//                backgroundOperation.text = "Initializing data points (${provider.dataPointCompletionRatio})"
-//                return null;
-//            }
-//        })              
-                    //backgroundOperation.text = "Initializing data points (${provider.dataPointCompletionRatio})"
                     dataPoint = provider.getNextDataPoint()
-                }
-                //backgroundOperation.text = "Now preparing to display all data points"                        
-                println "now preparing to display all nodes "
+                }                       
+                println "now batching batch node"
                 batchNode.batch()
-                //rootNode.attachChild(batchNode)
-                needToAttachBatchNode = true
+                loadingDataPoints = false
+                attachBatchNode()
                 backgroundOperation.text = ""
             }
         }.start()
