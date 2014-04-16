@@ -38,6 +38,7 @@ import org.sw7d.archeology.data.DefaultDataPointProvider
 import com.jme3.scene.BatchNode
 import com.jme3.collision.CollisionResult
 import java.util.concurrent.Callable
+import java.util.concurrent.Future
 
 class GroovyMain extends SimpleApplication {
     static void main(args){
@@ -49,8 +50,6 @@ class GroovyMain extends SimpleApplication {
         new GroovyMain(pauseOnLostFocus: false, displayStatView: false, displayFps: false, showSettings: false, settings: settings).start()
     }
     
-    //Material mat 
-    Map<String, ArcheologyFile> selectedFilesByName = [:]
     Map<String, Geometry> spatialsByName = [:]
     Map<Geometry, DataPoint3d> dataPointsByGeometry = [:]
     Geometry selected
@@ -95,14 +94,9 @@ class GroovyMain extends SimpleApplication {
         guiViewPort.addProcessor(niftyDisplay);
         nifty.validateXml("Interface/selectModule.xml")
         nifty.fromXml("Interface/selectModule.xml", "nothing", showSourceController)
-        
-        
-        
+          
         fnt = assetManager.loadFont("Interface/Fonts/Default.fnt");
         makeGraphFromPickle()
-
-        
-
 
     }
     
@@ -173,7 +167,7 @@ class GroovyMain extends SimpleApplication {
     
     void select(Geometry selection) {
         selected = selection
-        currentSelection.text = selected?.name ?: ""
+        setCenterText(selected?.name ?: "")
         DataPoint3d dp = dataPointsByGeometry[selection]
         if (dp) {
             selectionOrigin.text = "${provider.xLabel}: ${dp.x}\n${provider.yLabel}: ${dp.y}\n${provider.zLabel}: ${dp.z}"
@@ -248,8 +242,7 @@ class GroovyMain extends SimpleApplication {
         backgroundOperation.setText("PATIENce MORTAL, loADING SOM3 DATAZ")
         new Thread() {
             void run() {               
-                provider.initModules()
-                //selectModules (provider.modules.collect {it.name})      
+                provider.initModules()     
                 backgroundOperation.setText("")
                 provider.loadedModules = true
                 displayDataPoints()
@@ -259,34 +252,43 @@ class GroovyMain extends SimpleApplication {
         
     }
     
-    def detachBatchNode() {
-        enqueue (
-            new Callable () {
+    Future updateSceneGraph(Closure c) {
+        return enqueue (
+            new Callable() {
                 public Object call() {
-                    rootNode.detachChild(batchNode)
-                    batchNode.detachAllChildren()
-                    return null
-                }
-            }
-        ).get()
-    }
-    
-    def attachBatchNode() {
-        enqueue (
-            new Callable<Object> () {
-                public Object call() {
-                    rootNode.attachChild(batchNode)
-                    return null
+                    return c.call()
                 }
             }
         )
     }
     
+    def detachBatchNodeBlocking() {
+        updateSceneGraph {
+            rootNode.detachChild(batchNode);
+            batchNode.detachAllChildren()
+        }.get()
+    }
+    
+    def attachBatchNodeAsync() {
+        updateSceneGraph {rootNode.attachChild(batchNode)}
+    }
+    
+    def setCenterText(String text) {
+        updateSceneGraph {
+            currentSelection.text = text
+            def translation = currentSelection.localTranslation
+            float x = (settings.getWidth() / 2) - (currentSelection.lineWidth / 2)
+            currentSelection.localTranslation = new Vector3f(x, translation.y, translation.z)
+        }
+    }
+    
+    
+    
     void displayDataPoints() {
         new Thread() {
             void run() {
 
-                detachBatchNode()
+                detachBatchNodeBlocking()
                 loadingDataPoints = true
                 println "batch node detached, should be safe to add children from it in a thread"
                 
@@ -299,7 +301,7 @@ class GroovyMain extends SimpleApplication {
                 println "now batching batch node"
                 batchNode.batch()
                 loadingDataPoints = false
-                attachBatchNode()
+                attachBatchNodeAsync()
                 backgroundOperation.text = ""
             }
         }.start()
@@ -378,16 +380,13 @@ class GroovyMain extends SimpleApplication {
     }
     
     void makeBox(DataPoint3d dataPoint) {
-        //size 2 box, useful for drilling down in heavily populated zones
         int boxHeight = 3
         if (dataPoint.type == "bar") {
             boxHeight = dataPoint.z
         }
         int boxSideLength = Math.max(dataPoint.size, 1)
         Box b = new Box(new Vector3f(dataPoint.x,dataPoint.y, dataPoint.z - boxHeight), new Vector3f(dataPoint.x + boxSideLength,dataPoint.y + boxSideLength, dataPoint.z));
-        //Box b = new Box(new Vector3f(popularity / 10,imports / 10, 0), new Vector3f(popularity / 10 + 1,imports / 10+1, size/100));
         Geometry geom = new Geometry(dataPoint.name, b);
-        //geom.setUserData("dataPoint", dataPoint)
         spatialsByName[dataPoint.name] = geom
         dataPointsByGeometry[geom] = dataPoint
         TangentBinormalGenerator.generate(b);
