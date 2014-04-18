@@ -10,7 +10,6 @@ import com.jme3.math.ColorRGBA
 import com.jme3.scene.Node
 import org.sw7d.archeology.Modules
 import org.sw7d.archeology.ArcheologyFile
-import org.sw7d.archeology.data.Apache5000
 import com.jme3.light.DirectionalLight
 import com.jme3.util.TangentBinormalGenerator
 import com.jme3.math.Quaternion
@@ -67,7 +66,7 @@ class GroovyMain extends SimpleApplication {
         switchFirstPersonNavigation(false)
         batchNode = new BatchNode()
         rootNode.attachChild(batchNode)
-        provider = new DefaultDataPointProvider(maxDataPoints: 5000)
+        provider = new DefaultDataPointProvider()
         def al = new AmbientLight()
         al.setColor(ColorRGBA.White.mult(0.5f))
         rootNode.addLight(al)
@@ -294,10 +293,13 @@ class GroovyMain extends SimpleApplication {
                 
                 markOrigin()
                 DataPoint3d dataPoint = provider.getNextDataPoint()
+                int i = 0
                 while (dataPoint) {
                     makeBox(dataPoint)
                     dataPoint = provider.getNextDataPoint()
-                }                       
+                    i++
+                }   
+                println "total data points: ${i}"
                 println "now batching batch node"
                 batchNode.batch()
                 loadingDataPoints = false
@@ -382,10 +384,10 @@ class GroovyMain extends SimpleApplication {
     void makeBox(DataPoint3d dataPoint) {
         int boxHeight = 3
         if (dataPoint.type == "bar") {
-            boxHeight = dataPoint.z
+            boxHeight = dataPoint.scaledZ
         }
         int boxSideLength = Math.max(dataPoint.size, 1)
-        Box b = new Box(new Vector3f(dataPoint.x,dataPoint.y, dataPoint.z - boxHeight), new Vector3f(dataPoint.x + boxSideLength,dataPoint.y + boxSideLength, dataPoint.z));
+        Box b = new Box(new Vector3f(dataPoint.scaledX,dataPoint.scaledY, dataPoint.scaledZ - boxHeight), new Vector3f(dataPoint.scaledX + boxSideLength,dataPoint.scaledY + boxSideLength, dataPoint.scaledZ));
         Geometry geom = new Geometry(dataPoint.name, b);
         spatialsByName[dataPoint.name] = geom
         dataPointsByGeometry[geom] = dataPoint

@@ -2,6 +2,7 @@ package org.sw7d.archeology.data
 
 import org.sw7d.archeology.Modules
 class DataPointProvider {
+    public Scale3d scale = new Scale3d()
     public Modules modules
     public boolean loadedModules = false
     int maxDataPoints= 0
@@ -41,6 +42,7 @@ class DataPointProvider {
             return null;
         } else {
             currentModuleZeroBased++
+            dataPoints[currentModuleZeroBased].scale = this.scale
             return dataPoints[currentModuleZeroBased]
         }
     }
