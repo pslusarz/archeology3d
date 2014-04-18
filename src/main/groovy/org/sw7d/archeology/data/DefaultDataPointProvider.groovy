@@ -7,10 +7,12 @@ class DefaultDataPointProvider extends DataPointProvider {
     def javaNames
     def namesByPopularity
     
+    
     DefaultDataPointProvider() {
         xLabel = "Popularity"
-        yLabel = "Imports"
+        yLabel = "Commits"
         zLabel = "Lines of Code"
+        scale = new Scale3d(y: 5.0, z: 0.1)
     }
     
     def colors = ['Orange','Brown','Red','Magenta','Pink'] //['DarkGray', 'Gray', 'LightGray', 'Cyan','Yellow','Green',
@@ -22,10 +24,10 @@ class DefaultDataPointProvider extends DataPointProvider {
             moduleColors[module.name] = colors[i]
         }
         modules*.files.flatten().findAll{it.popularity > 0}.sort{-it.popularity}.each { ArcheologyFile it ->
-            dataPoints << new DataPoint3d(name: it.javaName(), x: (it.popularity) , y: (it.javaImports.size()), z: (it.linesCount), 
+            dataPoints << new DataPoint3d(name: it.javaName(), x: (it.popularity) , y: (it.commits.size()), z: (it.linesCount), 
                 delegate: it, 
                 color: moduleColors[it.module.name],
-                scale: new Scale3d(y: 5.0, z: 0.1)
+                
             )
         }
         
