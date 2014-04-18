@@ -131,6 +131,7 @@ class GroovyMain extends SimpleApplication {
                         void run() {
                             Binding binding = new Binding();
                             binding.setVariable("modules", Modules.create())
+                            binding.setVariable("application", this)
                             GroovyShell shell = new GroovyShell(binding);
                             File scriptFile = new File("scripts/runtime/DefaultScript.groovy")
                             backgroundOperation.text = "Don't press anything. Running script: "+scriptFile.canonicalPath
