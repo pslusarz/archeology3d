@@ -78,6 +78,7 @@ class GroovyMain extends SimpleApplication {
 
         resetCamera()
         flyCam.setMoveSpeed((float) (flyCam.getMoveSpeed() * 10f));
+        cam.setFrustumFar(10000)
         
         initKeys()
         initCrossHairs() 

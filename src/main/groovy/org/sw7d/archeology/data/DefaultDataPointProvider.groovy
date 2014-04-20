@@ -15,7 +15,7 @@ class DefaultDataPointProvider extends DataPointProvider {
         scale = new Scale3d(y: 5.0, z: 0.1)
     }
     
-    def colors = ['Orange','Brown','Red','Magenta','Pink'] //['DarkGray', 'Gray', 'LightGray', 'Cyan','Yellow','Green',
+    def colors = ['Orange','Brown','Red','Magenta','Pink','Cyan','Yellow','Green']
     
     def initModules() {
         modules = Modules.create()
