@@ -1,4 +1,4 @@
-package org.sw7d.archeology.parsing
+package org.sw7d.archeology.tools
 
 import org.sw7d.archeology.ArcheologyFile
 

@@ -8,4 +8,6 @@ How do you make sense of a software ecosystem with 1000 classes? 10,000? 50,000?
 
 This application isn't ready for others to use, but if you want to try it out, it runs on the latest JMonkey with Groovy plugin. I also had success running it on IntelliJ.
 
+Some raw results are posted here, on [ghpages](http://pslusarz.github.io/archeology3d/)
+
 You can find me on [+PaulSlusarz](https://plus.google.com/+PaulSlusarz/posts) and [@pslusarz](https://twitter.com/pslusarz)

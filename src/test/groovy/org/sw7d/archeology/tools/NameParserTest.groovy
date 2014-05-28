@@ -1,7 +1,7 @@
-package org.sw7d.archeology.parsing
+package org.sw7d.archeology.tools
 import org.junit.Test
 
-class NameParserTest {
+class NameParserTest extends GroovyDocTest {
     @Test
     void testOneWord() {
         assert ["Foo"] == NameParser.getWords('org.Foo')

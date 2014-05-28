@@ -1,4 +1,4 @@
-package org.sw7d.archeology.parsing
+package org.sw7d.archeology.tools
 
 import org.junit.Test
 
@@ -16,15 +16,19 @@ class GroovyDocTest {
     @Test
     public void ttt() {
         GroovyDocTool plainTool = new GroovyDocTool(["src/test/groovy"] as String[]);
-        plainTool.add(["org/sw7d/archeology/parsing/GroovyDocTest.groovy"]);
+        plainTool.add(["org/sw7d/archeology/parsing/NameParserTest.groovy"]);
         GroovyRootDoc root = plainTool.getRootDoc();
         GroovyClassDoc[] classDocs = root.classes();
         boolean seenThisMethod = false;
         for (int i = 0; i < classDocs.length; i++) {
             GroovyClassDoc clazz = root.classes()[i];
-            assert "GroovyDocTest" == clazz.name()
-
-            
+            assert "NameParserTest" == clazz.name()
+            println clazz.qualifiedTypeName()
+            println clazz.interfaces()
+            println clazz.superclass()?.name()
+            println clazz.importedClasses()
+            println clazz.methods()
+            println clazz.importedPackages()
             GroovyMethodDoc[] methodDocs = clazz.methods();
             for (int j = 0; j < methodDocs.length; j++) {
                 GroovyMethodDoc method = clazz.methods()[j];
