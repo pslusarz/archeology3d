@@ -52,8 +52,8 @@ contents += "                data.addRows(${selectedWords.size()});\n"
 selectedWords.eachWithIndex { String word, List<ArcheologyFile> files, int i ->
     contents += "                    data.setValue(${i},0,'${word}');\n" 
     contents += "                    data.setValue(${i},1,${files.size()});\n" 
-    contents += "                    data.setValue(${i},2,'_${word}.html');\n"
-    File wordFile = new File("./results/termcloud/_${word}.html")
+    contents += "                    data.setValue(${i},2,'word-${word}.html');\n"
+    File wordFile = new File("./results/termcloud/word-${word}.html")
     wordFile.delete()
     wordFile.parentFile.mkdirs()
     wordFile << "<html><head><title>${word} in class names</title></head><body><h1>${files.size()} occurences of '${word}' in class names</h1>\n"
