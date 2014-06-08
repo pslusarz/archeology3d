@@ -20,7 +20,7 @@ class DefaultDataPointProvider extends DataPointProvider {
     def initModules() {
         modules = Modules.create()
         def moduleColors = [:].withDefault{'Blue'}
-        modules.sort{-it.files.size()}[0..(colors.size()-1)].eachWithIndex { module, i ->
+        modules.sort{-it.files.size()}[0..Math.min((colors.size()-1), modules.size()-1)].eachWithIndex { module, i ->
             moduleColors[module.name] = colors[i]
         }
         modules*.files.flatten().findAll{it.popularity > 0}.sort{-it.popularity}.each { ArcheologyFile it ->

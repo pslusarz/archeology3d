@@ -4,7 +4,7 @@ import java.util.List
 
 class Modules extends ArrayList<Module> {
     //static String serializedFile = "carfax-modules.pickle"
-    static Settings settings = new Settings(org: 'apache')
+    static Settings settings = new Settings(org: 'autoreports')
     
     public static Modules loadedModules
 
@@ -113,6 +113,12 @@ class Modules extends ArrayList<Module> {
         def fis = new FileInputStream(settings.aggregateSerializedFileName)
         def ois = new MyObjectInputStream(Modules.class.classLoader, fis)
         return ois.readObject()
+    }
+    
+    public static Modules switchTo(Settings settings) {
+        Modules.settings = settings
+        loadedModules = null
+        return create()
     }
 
     public static Modules create() {
