@@ -9,7 +9,7 @@ class DataPoint3d {
     int size = 1
     Scale3d scale = new Scale3d()
     
-    int getScaledX() {
+    int getScaledX() {        
         return x * scale.x
     }
     int getScaledY() {

@@ -17,60 +17,32 @@ import org.sw7d.archeology.Settings
 
 List<DataPoint3d> dp = []
 
-Set<String> paths = new HashSet<String>()
-List<String> files = []
-
-modules*.files.flatten().findAll{it.javaName() && !it.javaName().startsWith('java') && !(it.canonicalPath.contains('/test/') || it.canonicalPath.contains('/integration/'))}.each { ArcheologyFile file ->
-         String packagePath = file.javaName().replaceAll(/\./, "/")+"."+file.extension()
-         paths << file.canonicalPath - packagePath 
-         files << packagePath
-    dp << new DataPoint3d(z: file.linesCount, x: file.popularity, y: file.commits.size(), name: file.name)           
+modules.each {
+    println it.name +" "+it.files.size()
 }
 
-GroovyDocTool plainTool = new GroovyDocTool(paths.toArray() as String[]);
-plainTool.add (files)
+Module ant = modules.find {it.name == 'hadoop-common'}
 
-Map<String,List<GroovyClassDoc>> interfaceImplementations = [:].withDefault{[]}
-
-GroovyRootDoc root = plainTool.getRootDoc();
-GroovyClassDoc[] classDocs = root.classes();
-classDocs.each { GroovyClassDoc clazz ->
-    clazz.interfaces().each {
-      interfaceImplementations[it.qualifiedTypeName()] << clazz        
-    }
+println ant.name
+println ant.files.size()
+Date current = ant.files*.commits.flatten().min()
+Date last = ant.files*.commits.flatten().max()
+int x = 0
+while (current <= last) {
+    List<ArcheologyFile> totalToDate = ant.files.findAll {ArcheologyFile file -> file.commits.find {Date date -> date <= current}}
+    List<ArcheologyFile> totalClosed = totalToDate.findAll {ArcheologyFile file -> file.commits.max() <= current}
+    //println current.toString() +" total: "+totalToDate.size()
+    current += 31
+    x += 1
+    def pointTotal = new DataPoint3d(x: x, y: 0, z: totalToDate.size(), color: 'Blue', name: current.format('YYYY/MM'), size: 3)
+    def pointClosed = new DataPoint3d(x: x, y: 0, z: totalClosed.size(), color: 'Green', name: current.format('YYYY/MM'), size: 3)
+    dp << pointTotal
+    dp << pointClosed
 }
 
-interfaceImplementations.sort{it.value.size()}.each { key, value ->
-    println key+ "  "+value.size()
-    println "    "+value.collect {it.qualifiedTypeName()}
-}
 
-String graphName = "autoreports"
-
-String output = """digraph ${graphName} {
-    rankdir=LR;
-"""
-
-classDocs.each { GroovyClassDoc clazz ->
-    clazz.interfaces().each { GroovyClassDoc iface ->
-       if (iface.qualifiedTypeName().contains("carfax")) {
-         output += "  ${clazz.name().replaceAll(/\./,'_')} -> ${iface.name()} [color=\"red\"]; \n"    
-       }
-    }
-    if (clazz.superclass() && clazz.superclass().qualifiedTypeName().contains("carfax")) {
-        output += "  ${clazz.name().replaceAll(/\./,'_')} -> ${clazz.superclass().name()}; \n"
-    }
-}
-output += "}"
-println output
-def file = new File("graphviz.in")
-file.delete()
-file.write(output)
-"/usr/local/bin/dot -o${graphName}.png -Tpng graphviz.in".execute().waitFor()
-"open ${graphName}.png".execute()
-
-
-
-return new DataPointProvider(xLabel: "popularity",
-    yLabel: "changes",
-    zLabel: "lines", dataPoints: dp)
+return new DataPointProvider(xLabel: "months",
+    yLabel: "n/a",
+    zLabel: "class count", 
+    dataPoints: dp,
+    scale: new Scale3d(x: 5, y:1 , z: 0.05))
