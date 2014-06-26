@@ -17,22 +17,19 @@ import org.sw7d.archeology.Settings
 
 List<DataPoint3d> dp = []
 
-modules.each {
-    println it.name +" "+it.files.size()
-}
-
 Module ant = modules.find {it.name == 'hadoop-common'}
 
-println ant.name
-println ant.files.size()
-Date current = ant.files*.commits.flatten().min()
-Date last = ant.files*.commits.flatten().max()
+List<ArcheologyFile> classFiles =  ant.files.findAll {it.javaName() && !it.isGenerated()}
+println ant.name+" "+classFiles.size()
+
+Date current = classFiles*.commits.flatten().min()
+Date last = classFiles*.commits.flatten().max()
 int x = 0
 while (current <= last) {
-    List<ArcheologyFile> totalToDate = ant.files.findAll {ArcheologyFile file -> file.commits.find {Date date -> date <= current}}
+    List<ArcheologyFile> totalToDate = classFiles.findAll {ArcheologyFile file -> file.commits.find {Date date -> date <= current}}
     List<ArcheologyFile> totalClosed = totalToDate.findAll {ArcheologyFile file -> file.commits.max() <= current}
     //println current.toString() +" total: "+totalToDate.size()
-    current += 31
+    current += 7
     x += 1
     def pointTotal = new DataPoint3d(x: x, y: 0, z: totalToDate.size(), color: 'Blue', name: current.format('YYYY/MM'), size: 3)
     def pointClosed = new DataPoint3d(x: x, y: 0, z: totalClosed.size(), color: 'Green', name: current.format('YYYY/MM'), size: 3)
