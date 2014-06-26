@@ -17,29 +17,29 @@ import org.sw7d.archeology.Settings
 
 List<DataPoint3d> dp = []
 
-Module ant = modules.find {it.name == 'hadoop-common'}
-
-List<ArcheologyFile> classFiles =  ant.files.findAll {it.javaName() && !it.isGenerated()}
-println ant.name+" "+classFiles.size()
-
-Date current = classFiles*.commits.flatten().min()
-Date last = classFiles*.commits.flatten().max()
-int x = 0
-while (current <= last) {
-    List<ArcheologyFile> totalToDate = classFiles.findAll {ArcheologyFile file -> file.commits.find {Date date -> date <= current}}
-    List<ArcheologyFile> totalClosed = totalToDate.findAll {ArcheologyFile file -> file.commits.max() <= current}
-    //println current.toString() +" total: "+totalToDate.size()
-    current += 7
-    x += 1
-    def pointTotal = new DataPoint3d(x: x, y: 0, z: totalToDate.size(), color: 'Blue', name: current.format('YYYY/MM'), size: 3)
-    def pointClosed = new DataPoint3d(x: x, y: 0, z: totalClosed.size(), color: 'Green', name: current.format('YYYY/MM'), size: 3)
-    dp << pointTotal
-    dp << pointClosed
+//Module ant = modules.find {it.name == 'hadoop-common'}
+modules.sort{-it.files.size()}.eachWithIndex { Module ant, int index ->
+    List<ArcheologyFile> classFiles =  ant.files.findAll {it.javaName() && !it.isGenerated()}
+    println ant.name+" "+classFiles.size()
+    if (classFiles.size > 0) {
+        Date current = classFiles*.commits.flatten().min()
+        Date last = classFiles*.commits.flatten().max()
+        int x = 0
+        while (current <= last) {
+            List<ArcheologyFile> totalToDate = classFiles.findAll {ArcheologyFile file -> file.commits.find {Date date -> date <= current}}
+            List<ArcheologyFile> totalClosed = totalToDate.findAll {ArcheologyFile file -> file.commits.max() <= current}
+            //println current.toString() +" total: "+totalToDate.size()
+            current += 7
+            x += 1
+            def pointTotal = new DataPoint3d(x: x, y: index * 50, z: totalToDate.size(), color: 'Blue', name: ant.name+" "+current.format('YYYY/MM'), size: 5)
+            def pointClosed = new DataPoint3d(x: x, y: index * 50, z: totalClosed.size(), color: 'Green', name: ant.name+" "+current.format('YYYY/MM'), size: 5)
+            dp << pointTotal
+            dp << pointClosed
+        }
+    }
 }
-
-
 return new DataPointProvider(xLabel: "months",
-    yLabel: "n/a",
+    yLabel: "projects",
     zLabel: "class count", 
     dataPoints: dp,
     scale: new Scale3d(x: 5, y:1 , z: 0.05))
