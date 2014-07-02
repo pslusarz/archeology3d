@@ -4,7 +4,7 @@ import java.util.List
 
 class Modules extends ArrayList<Module> {
     //static String serializedFile = "carfax-modules.pickle"
-    static Settings settings = new Settings(org: 'autoreports')
+    static Settings settings = new Settings(org: 'apache')
     
     public static Modules loadedModules
 
