@@ -1,5 +1,8 @@
 package org.sw7d.archeology.data
 
+import groovy.transform.EqualsAndHashCode
+
+@EqualsAndHashCode(excludes=["scale","scaledX", "scaledY","scaledZ"])
 class DataPoint3d {
     String name
     int x, y, z
