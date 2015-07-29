@@ -51,16 +51,26 @@ import org.sw7d.archeology.data.Scale3d
 
 
 
-provider = new DataPointProvider(xLabel: "months",
-    yLabel: "projects",
-    zLabel: "class count", 
-    scale: new Scale3d(x: 10, y:10 , z: 10))
-(1..200).each {
-   provider.edge (
-       new DataPoint3d(x: it, y: it, z: it, color: 'Blue', name: "point ${it}", size: 5), 
-       new DataPoint3d(x: it+1, y: it+1, z: it+1, color: 'Blue', name: "point ${it+1}", size: 5)
-   )
-
+provider = new DataPointProvider(xLabel: "",
+    yLabel: "rank",
+    zLabel: "versions", 
+    scale: new Scale3d(x: 20, y:20 , z: 20))
+//(1..200).each {
+//   provider.edge (
+//       new DataPoint3d(x: it, y: it, z: it, color: 'Blue', name: "point ${it}", size: 5), 
+//       new DataPoint3d(x: it+1, y: it+1, z: it+1, color: 'Blue', name: "point ${it+1}", size: 5)
+//   )
+//
+//}
+(1..5).each { z ->
+(1..10).each { x ->
+def point = new DataPoint3d(x:x, y:0, z:z, name: "bottom-$z-0", size: 5)
+(1..15).each { y ->
+    def next = new DataPoint3d(x:point.x, y:point.y+3, z:point.z, name: "bottom-$z-$y", size: 5)
+    provider.edge (point, next)
+    point = next
+}
+}
 }
 
 return provider

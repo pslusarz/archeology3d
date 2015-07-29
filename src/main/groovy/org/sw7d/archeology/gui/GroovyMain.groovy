@@ -38,6 +38,8 @@ import com.jme3.scene.BatchNode
 import com.jme3.collision.CollisionResult
 import java.util.concurrent.Callable
 import java.util.concurrent.Future
+import com.jme3.scene.shape.Line
+import org.sw7d.archeology.data.Edge3d
 
 class GroovyMain extends SimpleApplication {
     static void main(args){
@@ -96,7 +98,7 @@ class GroovyMain extends SimpleApplication {
         nifty.fromXml("Interface/selectModule.xml", "nothing", showSourceController)
           
         fnt = assetManager.loadFont("Interface/Fonts/Default.fnt");
-        makeGraphFromPickle()
+        //makeGraphFromPickle()
 
     }
     
@@ -131,7 +133,7 @@ class GroovyMain extends SimpleApplication {
                     new Thread() {
                         void run() {
                             Binding binding = new Binding();
-                            binding.setVariable("modules", Modules.create())
+                            //binding.setVariable("modules", Modules.create())
                             binding.setVariable("application", this)
                             GroovyShell shell = new GroovyShell(binding);
                             File scriptFile = new File("scripts/runtime/DefaultScript.groovy")
@@ -267,6 +269,7 @@ class GroovyMain extends SimpleApplication {
         updateSceneGraph {
             rootNode.detachChild(batchNode);
             batchNode.detachAllChildren()
+            rootNode.detachAllChildren()
         }.get()
     }
     
@@ -298,9 +301,21 @@ class GroovyMain extends SimpleApplication {
                 int i = 0
                 while (dataPoint) {
                     makeBox(dataPoint)
+                    def previous = dataPoint
                     dataPoint = provider.getNextDataPoint()
                     i++
-                }   
+                } 
+                Edge3d edge = provider.nextEdge
+                while (edge) {
+                    println "next edge: "+edge.from.name+", "+edge.to.name
+                    Line b = new Line(new Vector3f(edge.from.scaledX,edge.from.scaledY,edge.from.scaledZ), new Vector3f(edge.to.scaledX,edge.to.scaledY,edge.to.scaledZ));
+                    b.lineWidth = edge.width
+                    Geometry geom = new Geometry("Line", b);
+                    geom.setMaterial(materialsByColor[ColorRGBA.Black]);
+                    updateSceneGraph {rootNode.attachChild(geom)} 
+                    edge = provider.nextEdge
+                }
+                
                 println "total data points: ${i}"
                 println "now batching batch node"
                 batchNode.batch()
