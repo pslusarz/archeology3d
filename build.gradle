@@ -1,0 +1,51 @@
+plugins {
+  id 'groovy'
+}
+
+repositories {
+  //  jcenter()
+  mavenCentral()
+  flatDir { dirs 'lib/jme3', 'lib/jme3-libraries', 'lib/jme3-test-data', 'dist/lib'}
+}
+
+dependencies {
+    implementation 'org.codehaus.groovy:groovy-all:2.4.15'
+//    implementation "org.jmonkeyengine:jme3-core:3.3.2-stable"
+//    implementation "org.jmonkeyengine:jme3-desktop:3.3.2-stable"
+//    implementation "org.jmonkeyengine:jme3-lwjgl:3.3.2-stable"
+    implementation 'jme3:jME3-core:'
+    implementation 'nifty:nifty:'
+    implementation 'jme3:jME3-niftygui:'
+    implementation 'nifty:nifty-default-controls:'
+    implementation 'nifty:nifty-style-black:'
+    implementation 'jme3:eventbus:'
+    runtime ':j-ogg-oggd:'
+    runtime ':j-ogg-vorbisd:'
+    runtime ':jME3-desktop:'
+    runtime ':jME3-effects:'
+    runtime ':jME3-jbullet:'
+    runtime ':jME3-jogg:'
+    runtime ':jME3-lwjgl-natives:'
+    runtime ':jME3-lwjgl:'
+    runtime ':jME3-networking:'
+    runtime ':jME3-niftygui:'
+    runtime ':jME3-plugins:'
+    runtime ':jME3-terrain:'
+    runtime ':jbullet:'
+    runtime ':jinput:'
+    runtime ':lwjgl:'
+    runtime ':nifty-default-controls:'
+    runtime ':nifty-javadoc:'
+    runtime ':nifty-style-black:'
+    runtime ':nifty:'
+    runtime ':stack-alloc:'
+    runtime ':vecmath:'
+    runtime ':xmlpull-xpp3:'
+//    runtime ':jME3-testdata:'
+    runtime ':assets:'
+
+
+
+    testImplementation 'junit:junit:4.13'
+}
+

@@ -98,7 +98,7 @@ class GroovyMain extends SimpleApplication {
         nifty.fromXml("Interface/selectModule.xml", "nothing", showSourceController)
           
         fnt = assetManager.loadFont("Interface/Fonts/Default.fnt");
-        //makeGraphFromPickle()
+        makeGraphFromPickle()
 
     }
     
@@ -180,8 +180,8 @@ class GroovyMain extends SimpleApplication {
     }
     
     void handleAction (String aname, Trigger trigger, Closure handler) {
+        String actionName = aname
         ActionListener actionListener = new ActionListener() {
-            String actionName = aname
             void onAction(String name, boolean keyPressed, float tpf) {
                 if (name == actionName) {
                     if (!keyPressed) println "======== $actionName =========="
@@ -373,7 +373,7 @@ class GroovyMain extends SimpleApplication {
         txt.setSize( 15f );
         txt.setColor(ColorRGBA.Black)
         txt.setText("< ${provider.getXYZLabels()[0]}");
-        txt.rotate(0f, 0f, (float)FastMath.DEG_TO_RAD * (180));
+        txt.rotate(0f, 0f, (FastMath.DEG_TO_RAD * (180)) as float);
         txt.setLocalTranslation(75f,-75f,0f)
         batchNode.attachChild(txt);
         
@@ -382,7 +382,7 @@ class GroovyMain extends SimpleApplication {
         txt2.setSize( 15f );
         txt2.setColor(ColorRGBA.Black)
         txt2.setText("${provider.getXYZLabels()[1]} >");
-        txt2.rotate(0f, 0f, (float)FastMath.DEG_TO_RAD * (90));
+        txt2.rotate(0f, 0f, (FastMath.DEG_TO_RAD * (90)) as float);
         txt2.setLocalTranslation(-25f, 30f, 0f)
         batchNode.attachChild(txt2);
         
@@ -391,7 +391,7 @@ class GroovyMain extends SimpleApplication {
         txt3.setSize( 15f );
         txt3.setColor(ColorRGBA.Black)
         txt3.setText("${provider.getXYZLabels()[2]} >");
-        txt3.rotate((float)FastMath.DEG_TO_RAD * 45, (float)FastMath.DEG_TO_RAD * (90), (float)FastMath.DEG_TO_RAD * (180));
+        txt3.rotate((FastMath.DEG_TO_RAD * 45) as float, (FastMath.DEG_TO_RAD * (90)) as float, (FastMath.DEG_TO_RAD * (180)) as float);
         txt3.setLocalTranslation(-100f,-120f,30f)
         batchNode.attachChild(txt3);
         

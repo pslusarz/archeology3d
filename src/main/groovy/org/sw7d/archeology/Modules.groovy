@@ -4,7 +4,7 @@ import java.util.List
 
 class Modules extends ArrayList<Module> {
     //static String serializedFile = "carfax-modules.pickle"
-    static Settings settings = new Settings(org: 'apache')
+    static Settings settings = new Settings(org: 'autoreports')
     
     public static Modules loadedModules
 
@@ -124,6 +124,7 @@ class Modules extends ArrayList<Module> {
     public static Modules create() {
         if (!loadedModules) {         
             if (!new File(settings.aggregateSerializedFileName).exists()) {
+                println "initalizing from loading from file system (will be slow)"
                 loadedModules = new Modules().initFromFilesystem().serialize()
             }
             loadedModules = initFromPickle()
