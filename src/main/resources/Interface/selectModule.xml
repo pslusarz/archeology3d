@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<nifty xmlns="http://nifty-gui.sourceforge.net/nifty-1.3.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://nifty-gui.sourceforge.net/nifty-1.3.xsd http://nifty-gui.sourceforge.net/nifty-1.3.xsd">
+    <useStyles filename="nifty-default-styles.xml" />
+    <useControls filename="nifty-default-controls.xml" />
+
+    <!--screen id="start" controller="org.sw7d.archeology.gui.SelectModuleController">
+        <layer childLayout="center">
+            <panel id="panel" height="90%" width="30%" align="right" valign="top" childLayout="center" visibleToMouse="true">
+                <control name="label" text="Select modules to display" align="left" valign="top" color="#f00f"/>
+                <control id="myListBox" width="100%" height="90%" align="center" 
+                     valign="center" name="listBox" vertical="optional" horizontal="optional" 
+                     displayItems="35" selectionMode="Multiple" />
+                <control id="doneButton" name="button" label="Done" align = "right" valign="bottom" />
+                <control id="selectAllButton" name="button" label="All" align = "left" valign="bottom" />
+                <control id="selectNoneButton" name="button" label="None" align = "center" valign="bottom" />
+            </panel>
+        </layer>
+    </screen--> 
+    <screen id="source" controller="org.sw7d.archeology.gui.ShowSourceController">
+        <layer childLayout="center">
+            <panel id="panel" height="90%" width="60%" align="left" valign="top" childLayout="center" visibleToMouse="true">
+                <control id="sourceScrollPanel" name="scrollPanel" align="left" valign="top" width="100%" height="100%" style="nifty-listbox">
+                    <control id="sourcecode" name="label" text="no source code loaded" align="left" width="300%" height="*"
+                            textHAlign="left" textVAlign="top" color="#000f"/>
+                </control>
+            </panel>
+        </layer>
+    </screen> 
+    <screen id="nothing">
+      <layer id="baseLayer" childLayout="center">
+      </layer>
+    </screen>     
+</nifty>

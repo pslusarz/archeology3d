@@ -42,7 +42,7 @@ dependencies {
     runtime ':vecmath:'
     runtime ':xmlpull-xpp3:'
 //    runtime ':jME3-testdata:'
-    runtime ':assets:'
+//    runtime ':assets'
 
 
 
