@@ -10,7 +10,6 @@ class Modules extends ArrayList<Module> {
 
     public Modules initFromFilesystem() {
         String root = settings.rootDataPath
-        println "reading from file system"
         new File(root).eachDir { File repository ->
             println "Repository: "+repository.name
             repository.eachDir{ File moduleDir ->
