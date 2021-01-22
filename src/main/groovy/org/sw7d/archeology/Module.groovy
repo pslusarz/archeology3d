@@ -48,9 +48,9 @@ class Module implements Serializable{
 	  name.replaceAll("-", "_")
   }
   
-  public boolean isRepoGit() {
-      ['git', 'github', 'stash'].contains(repository)
-  } 
+//  public boolean isRepoGit() {
+//      ['git', 'github', 'stash'].contains(repository)
+//  }
   
   String repoUrl() {
       if (repository == 'github' && path.contains("/apache")) {
@@ -124,30 +124,30 @@ class Module implements Serializable{
 	  }
   }
 
-  boolean isSandbox() {
-	  def result = false
-	  result
-  }
+//  boolean isSandbox() {
+//	  def result = false
+//	  result
+//  }
 
   boolean hasMeaningfulFiles() {
 	  hasMeaningfulFiles( new File(path))
   }
 
-  boolean isDead() {
-	  boolean result = false
-	  File moduleDir = new File(path)
-	  if (!hasMeaningfulFiles()) {
-		  result = true
-	  }
-	  def files = moduleDir.listFiles([accept: {File it -> it.name != 'CVS' && it.name != '.DS_Store'}] as FileFilter)
-
-	  files.each {
-		  if (!it.isDirectory() && (it.name.toLowerCase().contains('dead') || it.name.toLowerCase().contains('moved'))) {
-			  result = true
-		  }
-	  }
-	  return result
-  }
+//  boolean isDead() {
+//	  boolean result = false
+//	  File moduleDir = new File(path)
+//	  if (!hasMeaningfulFiles()) {
+//		  result = true
+//	  }
+//	  def files = moduleDir.listFiles([accept: {File it -> it.name != 'CVS' && it.name != '.DS_Store'}] as FileFilter)
+//
+//	  files.each {
+//		  if (!it.isDirectory() && (it.name.toLowerCase().contains('dead') || it.name.toLowerCase().contains('moved'))) {
+//			  result = true
+//		  }
+//	  }
+//	  return result
+//  }
 
   List<ArcheologyFile> acceptanceFiles() {
 	  List<ArcheologyFile> results = []

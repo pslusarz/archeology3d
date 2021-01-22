@@ -5,7 +5,7 @@ import java.util.regex.Matcher
 
 
 class ArcheologyFile extends File {
-    public static final textFileExtensions = ['java', 'groovy','html', 'txt', 'xml', 'sql']
+    public static final textFileExtensions = ['java', 'groovy','html', 'txt', 'xml', 'sql','js', 'ts', 'kt', 'rb']
     int linesCount = -1
     int popularity = 0
     Set<String> javaImports
@@ -15,15 +15,19 @@ class ArcheologyFile extends File {
     Module module
 
     public ArcheologyFile(File file, Module module) {	  
-        super(file.getAbsolutePath())
+        super(file.getCanonicalPath())
         this.module = module
-        if (isText()) {
+        //if (isText()) {
+        try {
             List<String> lines = file.readLines()
             linesCount = lines.size()
             imports = initImports(lines)
             javaPackage = initJavaPackage(lines)
+        } catch (Exception e) {
+            e.printStackTrace()
+        }
 	  
-            if (module.isRepoGit()) {
+            //if (module.isRepoGit()) {
                 String command
                 if (System.properties['os.name'].toLowerCase().contains('windows')) {
                     String gitDir = (new File(module.path).canonicalPath+"\\.git").replaceAll('\\\\','\\\\')
@@ -56,8 +60,8 @@ class ArcheologyFile extends File {
                     println "error: ${serr.toString()}"
                     
                 }
-            }
-        }	  
+           // }
+        //}
     }
   
     String repoUrl() {

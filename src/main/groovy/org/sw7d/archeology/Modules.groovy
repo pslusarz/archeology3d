@@ -4,7 +4,7 @@ import java.util.List
 
 class Modules extends ArrayList<Module> {
     //static String serializedFile = "carfax-modules.pickle"
-    static Settings settings = new Settings(org: 'autoreports')
+    static Settings settings = new Settings(org: 'carfax')
     
     public static Modules loadedModules
 
@@ -12,6 +12,7 @@ class Modules extends ArrayList<Module> {
         String root = settings.rootDataPath
         println "reading from file system"
         new File(root).eachDir { File repository ->
+            println "Repository: "+repository.name
             repository.eachDir{ File moduleDir ->
                 if (moduleDir.name != '.DS_Store') {
                     Module module
@@ -32,6 +33,7 @@ class Modules extends ArrayList<Module> {
                     def ois = new MyObjectInputStream(Module.class.classLoader, fis)
                     module = ois.readObject()
                     this << module
+                    println " ${this.size()} LOADED MODULES ===-----"
                 }
             }
         }

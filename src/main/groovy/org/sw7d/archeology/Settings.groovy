@@ -4,7 +4,7 @@ class Settings {
     String org
     String getAggregateSerializedFileName() {"${org}-modules.pickle"}
     String getRootDataPath() {
-        "../archeology3d-data/${org}/"
+        "../source/"
     }
     
     File getSerializedModuleFile(File repository, File moduleDir) {
